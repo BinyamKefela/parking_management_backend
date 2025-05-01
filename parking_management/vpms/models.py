@@ -1,3 +1,272 @@
 from django.db import models
-
+from django.contrib.auth.models import  AbstractUser,AbstractBaseUser,BaseUserManager,PermissionsMixin,Group
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.conf import settings
 # Create your models here.
+
+
+
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.utils import timezone
+import os
+from django.core.exceptions import ValidationError
+
+
+def validate_uploaded_image_extension(value):
+    valid_extensions = ['.png','.jpg','.jpeg','.PNG','.JPG','.JPEG']
+    ext = os.path.splitext(value.name)[1]
+    if not ext in valid_extensions:
+        raise ValidationError('Unsupported filed extension')
+        
+
+def get_upload_path(instance,filename):
+    ext = filename.split('.')[-1]
+    new_file_name = "profiles/"+f'{instance.id}.{ext}'
+    return new_file_name
+
+
+# Custom manager for user model
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, **extra_fields)
+    
+
+
+class User(AbstractBaseUser,PermissionsMixin):
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=30,null=True)
+    middle_name = models.CharField(max_length=30,null=True)
+    last_name = models.CharField(max_length=30,null=True)
+    phone_number = models.CharField(max_length=100,null=True)
+    address = models.CharField(max_length=100,null=True)
+    profile_picture = models.FileField(upload_to=get_upload_path,validators=[validate_uploaded_image_extension],null=True,blank=True)
+    date_joined = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+
+    # Make groups and user_permissions optional by adding blank=True and null=True
+    groups = models.ManyToManyField(
+        'auth.Group', 
+        blank=True,
+        null=True, 
+        related_name='customuser_set', 
+        related_query_name='customuser', 
+        help_text='The groups this user belongs to.',
+        verbose_name='groups'
+    )
+    
+    user_permissions = models.ManyToManyField(
+        'auth.Permission', 
+        blank=True,
+        null=True, 
+        related_name='customuser_set', 
+        related_query_name='customuser', 
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions'
+    )
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []  # fields to be used when creating a superuser
+    
+    objects = CustomUserManager()
+
+    def __str__(self):
+        return self.email
+
+    class Meta:
+        db_table = "user"
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+
+    def delete(self, *args, **kwargs):
+        if self.profile_picture:
+            if os.path.isfile(self.profile_picture.path):
+                os.remove(self.profile_picture.path)
+        return super().delete(*args, **kwargs)
+    
+    def save(self, *args, **kwargs):
+        if self.profile_picture:
+            if os.path.isfile(self.profile_picture.path):
+                os.remove(self.profile_picture.path)
+        return super().save(*args, **kwargs)
+
+class Plan(models.Model):
+    name = models.CharField(max_length=100,null=False,blank=False,unique=True)
+    max_locations = models.IntegerField(null=False)
+    max_staff = models.IntegerField(null=True)
+    max_users = models.IntegerField(null=False)
+    max_kds = models.IntegerField(null=False)
+    kds_enabled = models.BooleanField(default=False)
+    price = models.IntegerField(null=False)
+    billing_cycle = models.CharField(max_length=100,choices=(('daily','daily'),('weekly','weekly'),
+                                                             ('monthly','monthly'),('quarterly','quarterly'),
+                                                             ('yearly','yearly')))
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+
+class Tenant(models.Model):
+    company_owner = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    company_name = models.CharField(max_length=200,null=False)
+    plan = models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
+    primary_color = models.CharField(max_length=100,null=True)
+    language = models.CharField(max_length=100,null=True)
+    rtl_enabled = models.BooleanField(default=False)
+    status = models.CharField(max_length=100,null=False)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+class Subscription(models.Model):
+    tenant = models.ForeignKey(Tenant,on_delete=models.SET_NULL,null=True)
+    plan = models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    billing_provider = models.CharField(max_length=100)
+    status = models.CharField(max_length=100)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+class SubscriptionPayment(models.Model):
+    subscription = models.ForeignKey(Subscription,on_delete=models.SET_NULL,null=True)
+    payment_method = models.CharField(max_length=100,null=False)
+    amount = models.FloatField(null=False)
+    status = models.CharField(max_length=100,null=False)
+    transaction_id = models.CharField(max_length=100,null=False)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+
+    class Meta:
+        unique_together = ["transaction_id"]
+
+
+
+#use this model for users that have group owner, use it to store their bank accounts for payment purposes
+class ZoneOwnerBankAccount(models.Model):
+    user = models.ForeignKey(User,null=True,on_delete=models.SET_NULL)
+    account_type = models.CharField(max_length=100,null=False)
+    bank_account = models.CharField(max_length=100,null=False)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+    class Meta:
+        unique_together = ('user')
+
+
+class ParkingZone(models.Model):
+    zone_owner = models.ForeignKey(User,null=False,on_delete=models.SET_NULL)
+    name = models.CharField(max_length=100,null=False)
+    address = models.CharField(max_length=100,null=False)
+    latitude = models.CharField(max_length=100,null=True)
+    longitude = models.CharField(max_length=100,null=True)
+    total_floors = models.IntegerField(null=False)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+class ParkingFloor(models.Model):
+    zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
+    floor_number = models.CharField(max_length=100)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return "zone - "+str(self.zone.name)+" - floor - "+str(self.floor_number)
+
+class ParkingSlot(models.Model):
+    parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
+    slot_number = models.CharField(null=False)
+    vehicle_type = models.CharField(max_length=100,null=False)
+    is_available = models.BooleanField(default=True)
+    occupied_by_booking = models.CharField(max_length=100,null=True)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+    class Meta:
+        unique_together = ('parking_floor','slot_number')
+
+class Vehicle(models.Model):
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    plate_number = models.CharField(max_length=100)
+    vehicle_type = models.CharField(max_length=100)
+    rfid_tag = models.CharField(max_length=100,null=True)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+
+class PricingRule(models.Model):
+    parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
+    rule_name = models.CharField(max_length=100)
+    rate_type = models.CharField(max_length=100,choices=(('minute','minute'),('hourly','hourly'),
+                                                         ('daily','daily')))
+    rate = models.FloatField(null=False)
+    start_time = models.TimeField(null=True)
+    end_time = models.TimeField(null=True)
+    day_of_week = models.CharField(max_length=100,choices=(('MON','MON'),('TUE','TUE'),
+                                                         ('WED','WED'),('THU','THU'),
+                                                         ('FRI','FRI'),('SAT','SAT'),
+                                                         ('SUN','SUN')))
+    is_enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+
+
+class Booking(models.Model):
+    parking_slot = models.ForeignKey(ParkingSlot,on_delete=models.SET_NULL,null=True)
+    vehicle = models.ForeignKey(Vehicle,on_delete=models.SET_NULL,null=True)
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
+    total_price = models.FloatField(null=False)
+    status = models.CharField(max_length=100)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+
+class Payment(models.Model):
+    booking = models.ForeignKey(Booking,on_delete=models.SET_NULL,null=True)
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    amount = models.FloatField(null=True)
+    due_date = models.DateTimeField(null=True)
+    status = models.CharField(max_length=100)
+    payment_method = models.CharField(max_length=100)
+    transaction_id = models.CharField(max_length=100,null=True)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = "payment"
+
+
+
+
+class Notification(models.Model):
+    user_id = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    notification_type = models.CharField(max_length=100)
+    #maintenance_request_id = models.ForeignKey(MaintenanceRequest,on_delete=models.SET_NULL,null=True)
+    payment = models.ForeignKey(Payment,on_delete=models.SET_NULL,null=True)
+    booking = models.ForeignKey(Booking,on_delete=models.SET_NULL,null=True)
+    message = models.CharField(max_length=200,null=False)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(null=False)
+    read_at = models.DateTimeField(null=True)
+
+class NotificationUser(models.Model):
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    notification = models.ForeignKey(Notification,on_delete=models.SET_NULL,null=True)
+
+
+
