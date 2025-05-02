@@ -164,11 +164,11 @@ class ZoneOwnerBankAccount(models.Model):
     updated_at = models.DateTimeField(null=True)
 
     class Meta:
-        unique_together = ('user')
+        unique_together = ['user']
 
 
 class ParkingZone(models.Model):
-    zone_owner = models.ForeignKey(User,null=False,on_delete=models.SET_NULL)
+    zone_owner = models.ForeignKey(User,null=True,on_delete=models.SET_NULL)
     name = models.CharField(max_length=100,null=False)
     address = models.CharField(max_length=100,null=False)
     latitude = models.CharField(max_length=100,null=True)
@@ -186,10 +186,14 @@ class ParkingFloor(models.Model):
     def __str__(self):
         return "zone - "+str(self.zone.name)+" - floor - "+str(self.floor_number)
 
+class VehicleType(models.Model):
+    name = models.CharField(max_length=100,unique=True,null=False)
+
+
 class ParkingSlot(models.Model):
     parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
-    slot_number = models.CharField(null=False)
-    vehicle_type = models.CharField(max_length=100,null=False)
+    slot_number = models.CharField(max_length=100,null=False)
+    vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
     is_available = models.BooleanField(default=True)
     occupied_by_booking = models.CharField(max_length=100,null=True)
     created_at = models.DateTimeField(null=True)
@@ -198,10 +202,16 @@ class ParkingSlot(models.Model):
     class Meta:
         unique_together = ('parking_floor','slot_number')
 
+class ParkingSlot_VehicleType(models.Model):
+    vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
+    parking_slot = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
+ 
+
+
 class Vehicle(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     plate_number = models.CharField(max_length=100)
-    vehicle_type = models.CharField(max_length=100)
+    vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
     rfid_tag = models.CharField(max_length=100,null=True)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
@@ -254,7 +264,7 @@ class Payment(models.Model):
 
 
 class Notification(models.Model):
-    user_id = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     notification_type = models.CharField(max_length=100)
     #maintenance_request_id = models.ForeignKey(MaintenanceRequest,on_delete=models.SET_NULL,null=True)
     payment = models.ForeignKey(Payment,on_delete=models.SET_NULL,null=True)

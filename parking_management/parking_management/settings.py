@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'vpms.apps.VpmsConfig',
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,7 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'vpms.apps.VpmsConfig',
     'corsheaders',
 
     'rest_framework',
@@ -178,7 +178,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES":(
         "rest_framework.permissions.IsAuthenticated",
     ),
-    'DEFAULT_PAGINATION_CLASS': 'pms.api.custom_pagination.CustomPagination',
+    'DEFAULT_PAGINATION_CLASS': 'vpms.api.custom_pagination.CustomPagination',
     'PAGE_SIZE': 10,
     
 }

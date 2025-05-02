@@ -34,7 +34,7 @@ class GoogleLogin(SocialLoginView):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    #path('api/auth/', include('dj_rest_auth.urls')),                     # login, logout
+    path('api/', include('vpms.urls')),                     # login, logout
     #path('api/auth/registration/', include('dj_rest_auth.registration.urls')),  # registration
     #path('api/auth/social/', include('allauth.socialaccount.urls')),     # for account connections
     #path('api/auth/social/login/', include('dj_rest_auth.social_urls')),
