@@ -267,6 +267,29 @@ class GetTenats(generics.ListAPIView):
     pagination_class = CustomPagination
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def create_staff(request,owner_id,email,first_name,middle_name,last_name,password):
+    try:
+        owner = User.objects.get(owner_id)
+    except:
+        return Response({"error":"There is no user with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
+    if not owner.groups.filter(name='tenant').exists():
+        return Response({"error":"There is no owner with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
+    
+    staff = User()
+    staff.email = email
+    staff.first_name = first_name
+    staff.middle_name = middle_name
+    staff.last_name = last_name
+    groups = Group.objects.filter(name='staff')
+    staff.groups.clear()
+    staff.groups.set(groups)
+    staff.set_password(password)
+    staff.save()
+
+    return Response({"message":"successfully created user"},status=status.HTTP_200_OK)
+
 
 
    

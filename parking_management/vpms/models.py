@@ -103,6 +103,12 @@ class User(AbstractBaseUser,PermissionsMixin):
             if os.path.isfile(self.profile_picture.path):
                 os.remove(self.profile_picture.path)
         return super().save(*args, **kwargs)
+    
+
+# a model for assigning staff member users to an owner    
+class Staff(models.Model):
+    staff_user = models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name='staff_user')
+    owner = models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name='staff_owner')
 
 class Plan(models.Model):
     name = models.CharField(max_length=100,null=False,blank=False,unique=True)
@@ -126,7 +132,9 @@ class Tenant(models.Model):
     primary_color = models.CharField(max_length=100,null=True)
     language = models.CharField(max_length=100,null=True)
     rtl_enabled = models.BooleanField(default=False)
-    status = models.CharField(max_length=100,null=False)
+    status = models.CharField(max_length=100,null=False,choices=(('active','active'),('trial','trial'),
+                                                             ('suspended','suspended'),('cancelled','cancelled'),
+                                                             ('pending','pending')))
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
 
@@ -158,7 +166,7 @@ class SubscriptionPayment(models.Model):
 #use this model for users that have group owner, use it to store their bank accounts for payment purposes
 class ZoneOwnerBankAccount(models.Model):
     user = models.ForeignKey(User,null=True,on_delete=models.SET_NULL)
-    account_type = models.CharField(max_length=100,null=False)
+    account_type = models.CharField(max_length=100,null=False,choices=(('bank_account','bank_account'),('wallet','wallet'),('other','other')))
     bank_account = models.CharField(max_length=100,null=False)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)

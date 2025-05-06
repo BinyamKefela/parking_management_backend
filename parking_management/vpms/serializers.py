@@ -92,3 +92,17 @@ class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields = "__all__"
+
+class TenantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tenant
+        fields = "__all__"
+
+class ZoneOwnerBankAccountSerializer(serializers.Serializer):
+    class Meta:
+        models = ZoneOwnerBankAccount
+        fields = "__all__"
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['user'] = UserSerializer(instance.user).data
+        return representation
