@@ -77,7 +77,7 @@ class ZoneOwnerBankAccountCreateView(generics.CreateAPIView):
         except:
             return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
         if user.groups.filter(name='tenant'):
-            return Response({"error":"the user rovided is not a zone owner"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error":"the user provided is not a zone owner"},status=status.HTTP_400_BAD_REQUEST)
         return super().create(request, *args, **kwargs)
 
 

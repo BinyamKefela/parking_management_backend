@@ -17,6 +17,7 @@ from django.db.models import F, Value
 from django.db.models.functions import Concat
 import json
 from django.conf import settings
+from ..models import Staff
 
 
 User = get_user_model()
@@ -256,8 +257,8 @@ def update_user(request,id):
 
 
 
-class GetTenats(generics.ListAPIView):
-    queryset = User.objects.filter(groups__name="tenant")
+class GetOwners(generics.ListAPIView):
+    queryset = User.objects.filter(groups__name="owner")
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated,DjangoModelPermissions]
     filter_backends = [OrderingFilter,SearchFilter]
@@ -274,19 +275,28 @@ def create_staff(request,owner_id,email,first_name,middle_name,last_name,passwor
         owner = User.objects.get(owner_id)
     except:
         return Response({"error":"There is no user with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
-    if not owner.groups.filter(name='tenant').exists():
+    if not owner.groups.filter(name='owner').exists():
         return Response({"error":"There is no owner with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
     
-    staff = User()
-    staff.email = email
-    staff.first_name = first_name
-    staff.middle_name = middle_name
-    staff.last_name = last_name
+    staff_user = User()
+    staff_user.email = email
+    staff_user.first_name = first_name
+    staff_user.middle_name = middle_name
+    staff_user.last_name = last_name
     groups = Group.objects.filter(name='staff')
-    staff.groups.clear()
-    staff.groups.set(groups)
-    staff.set_password(password)
+    staff_user.groups.clear()
+    staff_user.groups.set(groups)
+    staff_user.set_password(password)
+    staff_user.save()
+
+    staff = Staff()
+    staff.staff_user = staff_user
+    staff.owner = owner
     staff.save()
+
+    
+
+    
 
     return Response({"message":"successfully created user"},status=status.HTTP_200_OK)
 

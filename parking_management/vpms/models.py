@@ -125,7 +125,7 @@ class Plan(models.Model):
     updated_at = models.DateTimeField(null=True)
 
 
-class Tenant(models.Model):
+class Owner(models.Model):
     company_owner = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     company_name = models.CharField(max_length=200,null=False)
     plan = models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
@@ -139,7 +139,7 @@ class Tenant(models.Model):
     updated_at = models.DateTimeField(null=True)
 
 class Subscription(models.Model):
-    tenant = models.ForeignKey(Tenant,on_delete=models.SET_NULL,null=True)
+    owner = models.ForeignKey(Owner,on_delete=models.SET_NULL,null=True)
     plan = models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
@@ -185,11 +185,17 @@ class ParkingZone(models.Model):
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
 
+    class Meta:
+        unique_together = ('zone_owner','name')
+
 class ParkingFloor(models.Model):
     zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
     floor_number = models.CharField(max_length=100)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
+
+    class Meta:
+        unique_together = ('zone','floor_number')
 
     def __str__(self):
         return "zone - "+str(self.zone.name)+" - floor - "+str(self.floor_number)
@@ -201,7 +207,6 @@ class VehicleType(models.Model):
 class ParkingSlot(models.Model):
     parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
     slot_number = models.CharField(max_length=100,null=False)
-    vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
     is_available = models.BooleanField(default=True)
     occupied_by_booking = models.CharField(max_length=100,null=True)
     created_at = models.DateTimeField(null=True)
@@ -210,6 +215,7 @@ class ParkingSlot(models.Model):
     class Meta:
         unique_together = ('parking_floor','slot_number')
 
+# a model for setting the type of cars a parking slot can accomodate
 class ParkingSlot_VehicleType(models.Model):
     vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
     parking_slot = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
