@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Owner,Rent
+from ..models import Owner
 from ..serializers import OwnerSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -13,11 +13,11 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import Group
 
-Owner_AVAILABLE = "available"
-Owner_TRIAL = "trial"
-Owner_SUSPENDED = "suspended"
-Owner_CANCELLED = "cancelled"
-Owner_PENDING = "pending"
+OWNER_AVAILABLE = "available"
+OWNER_TRIAL = "trial"
+OWNER_SUSPENDED = "suspended"
+OWNER_CANCELLED = "cancelled"
+OWNER_PENDING = "pending"
 
 User = get_user_model()
 
@@ -28,9 +28,10 @@ class OwnerListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
     filterset_fields = '__all__'
-    search_fields = [field.name for field in Owner._meta.fields]
+    search_fields = ["field.name for field in Owner._meta.fields"]
     ordering_fields = [field.name for field in Owner._meta.fields]
     ordering = ['id']
+    lookup_field = 'id'
     pagination_class = CustomPagination
 
 
@@ -77,19 +78,19 @@ class OwnerCreateView(generics.CreateAPIView):
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        user_id = request.data.get('company_owner_id')
+        user_id = request.data.get('company_owner')
         try:
             user = User.objects.get(id=user_id)
         except:
             return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
         #checking whether there is a group with a name Owner in the system
         try:
-            user.groups.add(Group.objects.get(name='Owner'))
+            user.groups.add(Group.objects.get(name='owner'))
         except:
-            return Response({"error":"there is no role Owner"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error":"there is no role owner"},status=status.HTTP_400_BAD_REQUEST)
         #checking whether the user has been assigned a role of a Owner
-        if user.groups.filter(name="Owner").exists:
-            return Response({"error": "the user you are assigning as a Owner does not have a role of a Owner, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
+        if not user.groups.filter(name="owner").exists():
+            return Response({"error": "the user you are assigning as an owner does not have a role of an owner, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
 
 

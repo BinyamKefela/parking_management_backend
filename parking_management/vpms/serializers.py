@@ -93,18 +93,23 @@ class PermissionSerializer(serializers.ModelSerializer):
         model = Permission
         fields = "__all__"
 
-class TenantSerializer(serializers.ModelSerializer):
+class OwnerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tenant
+        model = Owner
         fields = "__all__"
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['company_owner'] = UserSerializer(instance.company_owner).data
+        return representation
+    
 class ZoneOwnerBankAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = ZoneOwnerBankAccount
         fields = "__all__"
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['user'] = UserSerializer(instance.user).data
+        representation['owner'] = OwnerSerializer(instance.owner).data
         return representation
     
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -113,12 +118,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         fields = "__all__"
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['user'] = UserSerializer(instance.user).data
+        representation['owner'] = OwnerSerializer(instance.owner).data
         return representation
     
 class ParkingZoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParkingZone
+        fields = "__all__"
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['zone_owner'] = UserSerializer(instance.zone_owner).data
@@ -127,6 +134,8 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
 class ParkingFloorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParkingFloor
+        fields = "__all__"
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['zone'] = ParkingZoneSerializer(instance.zone).data
@@ -135,6 +144,8 @@ class ParkingFloorSerializer(serializers.ModelSerializer):
 class ParkingSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParkingSlot
+        fields = "__all__"
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['parking_floor'] = ParkingFloorSerializer(instance.parking_floor).data
@@ -144,6 +155,8 @@ class ParkingSlotSerializer(serializers.ModelSerializer):
 class StaffSerializer(serializers.ModelSerializer):
     class Meta:
         model = Staff
+        fields = "__all__"
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['staff_user'] = UserSerializer(instance.staff_user).data
@@ -153,10 +166,12 @@ class StaffSerializer(serializers.ModelSerializer):
 class VehicleTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = VehicleType
+        fields = "__all__"
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
+        fields = "__all__"
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -168,8 +183,68 @@ class NotificationSerializer(serializers.ModelSerializer):
 class NotificationUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationUser
+        fields = "__all__"
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['user'] = UserSerializer(instance.user).data
         #representation['booking'] = BookingSerializer(instance.booking).data
-        return representation   
+        return representation
+
+class PlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Plan
+        fields = "__all__"
+
+class VehicleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vehicle
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance) 
+        representation['user'] = UserSerializer(instance.user).data
+        return representation
+    
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance) 
+        representation['parking_slot'] = ParkingSlotSerializer(instance.parking_slot).data
+        representation['vehicle'] = VehicleSerializer(instance.vehicle).data
+        return representation
+
+class ParkingSlot_VehicleTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlot_VehicleType
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance) 
+        representation['parking_slot'] = ParkingSlotSerializer(instance.parking_slot).data
+        representation['vehicle_type'] = VehicleTypeSerializer(instance.vehicle_type).data
+        return representation
+    
+class PricingRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PricingRule
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance) 
+        representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
+        return representation
+    
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance) 
+        representation['parking_slot'] = ParkingSlotSerializer(instance.parking_slot).data
+        representation['vehicle'] = VehicleSerializer(instance.vehicle).data
+        return representation

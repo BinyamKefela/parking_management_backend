@@ -17,7 +17,7 @@ class GroupListView(generics.ListAPIView):
     search_fields = [field.name for field in Group._meta.fields]
     ordering_fields = [field.name for field in Group._meta.fields]
     ordering = ['id']
-    pagination_class = custom_pagination
+    pagination_class = custom_pagination.CustomPagination
 
 
 class GroupRetrieveView(generics.RetrieveAPIView):
@@ -59,7 +59,7 @@ class GroupCreateView(generics.CreateAPIView):
 def setGroupPermissions(request):
     if not request.user.has_perm('auth.change_group'):
         return Response({"message":"you don't have the permission to set group's permissions"},status=status.HTTP_403_FORBIDDEN)
-    group_id = request.data.get("group_id")
+    group_id = request.data.get("group")
     permission_code_names = request.data.get("permissions") 
     if not group_id or not permission_code_names:
         return Response({"message":"please provide group_id and permissions"},status=status.HTTP_400_BAD_REQUEST)
@@ -76,12 +76,12 @@ def setGroupPermissions(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def getGroupPermission(request):
-    if not request.has_perm('auth.view_group'):
+    if not request.user.has_perm('auth.view_group'):
         return Response({"message":"you don't have the permission to set group's permissions"},status=status.HTTP_403_FORBIDDEN)
     try:
-        group = Group.objects.get(request.data.get('name'))
+        group = Group.objects.get(name=request.data.get('name'))
     except:
         return Response({"message":"group with then given name does'nt exist"}, status=status.HTTP_404_NOT_FOUND)
-    permissions = group.permissions.values_list("name")
+    permissions = group.permissions.values_list("codename")
     return Response({"name":group.name,"group_permissions":permissions},status=status.HTTP_200_OK)
     

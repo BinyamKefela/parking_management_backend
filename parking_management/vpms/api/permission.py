@@ -13,7 +13,7 @@ class PermissionListView(generics.ListAPIView):
     search_fields = [field.name for field in Permission._meta.fields]
     ordering_fields = [field.name for field in Permission._meta.fields]
     ordering = ['id']
-    pagination_class = custom_pagination
+    pagination_class = custom_pagination.CustomPagination
 
 
 class PermissionRetrieveView(generics.RetrieveAPIView):

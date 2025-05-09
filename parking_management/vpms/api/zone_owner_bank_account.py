@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import ZoneOwnerBankAccount,Rent
+from ..models import ZoneOwnerBankAccount
 from ..serializers import ZoneOwnerBankAccountSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -11,6 +11,7 @@ from django.conf import settings
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
+from vpms.models import Owner
 
 
 User = get_user_model()
@@ -71,13 +72,12 @@ class ZoneOwnerBankAccountCreateView(generics.CreateAPIView):
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        user_id = request.data.get('user')
+        owner_id = request.data.get('owner')
         try:
-            user = User.objects.get(id=user_id)
+            owner = Owner.objects.get(id=owner_id)
         except:
-            return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
-        if user.groups.filter(name='tenant'):
-            return Response({"error":"the user provided is not a zone owner"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error":"there is no owner with the given owner id"},status=status.HTTP_404_NOT_FOUND)
+        
         return super().create(request, *args, **kwargs)
 
 

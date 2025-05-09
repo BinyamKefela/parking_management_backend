@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Subscription,Rent
+from ..models import Subscription
 from ..serializers import SubscriptionSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -11,7 +11,7 @@ from django.conf import settings
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
-
+from vpms.models import Owner
 
 
 User = get_user_model()
@@ -72,13 +72,12 @@ class SubscriptionCreateView(generics.CreateAPIView):
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        user_id = request.data.get('tenant_id')
+        owner_id = request.data.get('owner')
         try:
-            user = User.objects.get(id=user_id)
+            owner = Owner.objects.get(id=owner_id)
         except:
-            return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
-        if user.groups.filter(name="tenant").exists():
-            return Response({"error": "the user you are trying to create a subscription for does not have a role of a tenant, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error":"there is no owner with the given owner id"},status=status.HTTP_404_NOT_FOUND)
+        
         return super().create(request, *args, **kwargs)
 
 

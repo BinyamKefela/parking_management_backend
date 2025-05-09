@@ -138,15 +138,21 @@ class Owner(models.Model):
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
 
+    class Meta:
+        unique_together = ('company_owner','company_name')
+
 class Subscription(models.Model):
     owner = models.ForeignKey(Owner,on_delete=models.SET_NULL,null=True)
     plan = models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     billing_provider = models.CharField(max_length=100)
-    status = models.CharField(max_length=100)
+    status = models.CharField(max_length=100,choices=(('active','active'),('pending','pending'),('terminated','terminated')))
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
+
+    class Meta:
+        unique_together = ('owner',)
 
 class SubscriptionPayment(models.Model):
     subscription = models.ForeignKey(Subscription,on_delete=models.SET_NULL,null=True)
@@ -165,14 +171,14 @@ class SubscriptionPayment(models.Model):
 
 #use this model for users that have group owner, use it to store their bank accounts for payment purposes
 class ZoneOwnerBankAccount(models.Model):
-    user = models.ForeignKey(User,null=True,on_delete=models.SET_NULL)
+    owner = models.ForeignKey(Owner,null=True,on_delete=models.SET_NULL)
     account_type = models.CharField(max_length=100,null=False,choices=(('bank_account','bank_account'),('wallet','wallet'),('other','other')))
     bank_account = models.CharField(max_length=100,null=False)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
 
     class Meta:
-        unique_together = ['user']
+        unique_together = ['owner']
 
 
 class ParkingZone(models.Model):

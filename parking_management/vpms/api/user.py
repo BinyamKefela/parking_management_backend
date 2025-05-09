@@ -113,7 +113,7 @@ def setUserPermissions(request):
 def setUserGroups(request):
     if not request.user.has_perm('auth.change_user'):
         return Response({"message":"you don't have the permission to set user's groups"},status=status.HTTP_403_FORBIDDEN)
-    user_id = request.data.get("user_id")
+    user_id = request.data.get("user")
     group_names = request.data.get("groups") 
     if not user_id or not group_names:
         return Response({"message":"please provide user_id and permissions"},status=status.HTTP_400_BAD_REQUEST)
