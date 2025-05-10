@@ -230,11 +230,14 @@ class ParkingSlot_VehicleType(models.Model):
 
 class Vehicle(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    plate_number = models.CharField(max_length=100)
+    plate_number = models.CharField(max_length=100,unique=True)
     vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
     rfid_tag = models.CharField(max_length=100,null=True)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
+
+    class Meta:
+        unique_together = ('vehicle_type','user')
 
 
 class PricingRule(models.Model):
@@ -261,7 +264,7 @@ class Booking(models.Model):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
     total_price = models.FloatField(null=False)
-    status = models.CharField(max_length=100)
+    status = models.CharField(max_length=100,choices=(('active','active'),('cancelled','cancelled'),('completed','completed')))
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
 
