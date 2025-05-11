@@ -27,7 +27,7 @@ DEBUG = True
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-ALLOWED_HOSTS = ['192.168.0.165','192.168.0.178']
+ALLOWED_HOSTS = ['192.168.0.165','192.168.0.178','localhost']
 
 
 # Application definition
@@ -190,4 +190,16 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ketsebaotertumo@gmail.com'
+EMAIL_SUBJECT_PREFIX = 'Astedader VPMS'
+EMAIL_HOST_PASSWORD = 'vhyaunypmaksffdr'
+DEFAULT_FROM_EMAIL = 'ASTEDADER VPMS <noreply@example.com>'
+
 

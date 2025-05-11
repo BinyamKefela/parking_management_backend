@@ -13,6 +13,8 @@ from django.utils import timezone
 import os
 from django.core.exceptions import ValidationError
 
+import uuid
+
 
 def validate_uploaded_image_extension(value):
     valid_extensions = ['.png','.jpg','.jpeg','.PNG','.JPG','.JPEG']
@@ -103,7 +105,16 @@ class User(AbstractBaseUser,PermissionsMixin):
             if os.path.isfile(self.profile_picture.path):
                 os.remove(self.profile_picture.path)
         return super().save(*args, **kwargs)
-    
+
+
+
+class EmailVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Verification for {self.user.email}"    
 
 # a model for assigning staff member users to an owner    
 class Staff(models.Model):

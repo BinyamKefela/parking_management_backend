@@ -28,6 +28,10 @@ urlpatterns = [
   #path("get_managers",get_managers,name="get_managers"),
   #path("get_owners",GetOwners.as_view(),name="get_owners"),
 
+  path('sign_up',sign_up, name='sign_up'),
+  path('verify-email/<uuid:token>', verify_email, name='verify_email'),
+
+
 
 
 
