@@ -26,6 +26,8 @@ from django.contrib.sites.models import Site
 from ..models import EmailVerification
 import os
 from dotenv import load_dotenv
+import random
+from rest_framework.views import APIView
 
 load_dotenv()
 
@@ -157,26 +159,14 @@ def send_password_reset_email(request):
     dummy_site = "http://localhost:3000/en/reset-password/" + f'{token}'
     reset_link = f"https://{current_site.domain}/reset-password/{token}"
     
-    # Correct HTML message body with proper structure
-    html_message = f'''
-    <html>
-      <body>
-        <p>Hello,</p>
-        <p>Click this link {dummy_site} to reset your password.</p>
-        <p>Best regards,<br>Phoenixopia PMS</p>
-      </body>
-    </html>
-    '''
+    
     
     # Send email with both plain text and HTML content
     send_mail(
         subject="Password reset request",
-        message=f"Click the link below to reset your password:\n\n{dummy_site}",  # Plain text version
-        html_message=html_message,  # HTML version
-        from_email="ketsebaotertumo@gmail.com",
-        recipient_list=[email],
-        fail_silently=False
-    )
+        message=f"Click the link below to reset your password:\n\n{current_site}",  # Plain text version
+        from_email=EMAIL_HOST_USER,
+        recipient_list=[email])
 
 
     return Response({"message":"password reset email was sent successfully"},status=status.HTTP_200_OK)
@@ -195,6 +185,85 @@ def reset_password(request,token):
     user.save()
 
     return Response({"message":"password reset successfully!"},status=status.HTTP_200_OK)
+
+
+#an API for sending a reset code to the user's email
+@api_view(["POST"])
+@permission_classes([])
+def send_password_reset_email_phone(request):
+    email = request.data.get("email")
+    if not email:
+        return Response({"error":"please provide email!"},status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({"error":"there is no user with the provided email"},status=status.HTTP_404_NOT_FOUND)
+    code = f"{random.randint(1000, 9999)}"
+    EmailVerification.objects.create(email=email,code=code)
+
+    current_site = get_current_site(request)
+    dummy_site = "http://localhost:3000/en/reset-password/" + f'{token}'
+    reset_link = f"https://{current_site.domain}/reset-password/{token}"
+    
+    
+    
+    # Send email with both plain text and HTML content
+    send_mail(
+        subject="Password reset request",
+        message=f"Your verification code is: {code}",
+        from_email=EMAIL_HOST_USER,
+        recipient_list=[email]
+    )
+
+    return Response({"message":"password reset code was sent to your email successfully"},status=status.HTTP_200_OK)
+
+
+
+class VerifyResetCodeView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        code = request.data.get("code")
+
+        try:
+            record = EmailVerification.objects.filter(email=email, code=code, is_used=False).latest('created_at')
+        except EmailVerification.DoesNotExist:
+            return Response({"error": "Invalid code."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if record.is_expired():
+            return Response({"error": "Code expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Mark as used and allow password reset to proceed
+        record.is_used = True
+        record.save()
+        return Response({"message": "Code verified successfully."}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([])
+def reset_password_phone(request):
+    email = request.data.get('email')
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({"error":"There is no user with the given email"},status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+            # Ensure a valid, unused, non-expired verification code exists
+        verification = EmailVerification.objects.filter(email=email, is_used=True).latest("created_at")
+    except EmailVerification.DoesNotExist:
+        return Response({"error": "No verified code found for this email."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if verification.is_expired():
+        return Response({"error": "Verification expired. Request a new code."}, status=status.HTTP_400_BAD_REQUEST)
+
+    new_password = request.data.get("password")
+    user.set_password(new_password)
+    user.save()
+
+    return Response({"message":"password reset successfully!"},status=status.HTTP_200_OK)
+
+
+
  
 
 @api_view(["POST"])

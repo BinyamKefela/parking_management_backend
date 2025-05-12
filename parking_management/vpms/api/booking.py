@@ -11,6 +11,7 @@ from django.conf import settings
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import api_view,permission_classes
 
 
 
@@ -101,3 +102,17 @@ class BookingCreateView(generics.CreateAPIView):
         booking.save()
         parking_slot.save()
         return super().create(request, *args, **kwargs)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_booking(request):
+    booking_id = request.data.get("booking_id")
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        if not (booking.status == BOOKING_ACTIVE):
+            return Response({"there is no active booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
+        booking.status = BOOKING_CANCELLED
+        booking.save()
+        return Response({"message","Booking cancelled successfully"},status=status.HTTP_200_OK)
+    except:
+        return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)

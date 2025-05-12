@@ -12,6 +12,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
 import os
 from django.core.exceptions import ValidationError
+from datetime import timedelta
 
 import uuid
 
@@ -114,7 +115,17 @@ class EmailVerification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Verification for {self.user.email}"    
+        return f"Verification for {self.user.email}"
+
+class EmailResetCode(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+       
 
 # a model for assigning staff member users to an owner    
 class Staff(models.Model):
@@ -220,9 +231,13 @@ class ParkingFloor(models.Model):
 class VehicleType(models.Model):
     name = models.CharField(max_length=100,unique=True,null=False)
 
+class ParkingSlotGroup(models.Model):
+    Parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
+    name = models.CharField(max_length=100,null=False,unique=True)
+
 
 class ParkingSlot(models.Model):
-    parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
+    parking_slot_group = models.ForeignKey(ParkingSlotGroup,on_delete=models.SET_NULL,null=True)
     slot_number = models.CharField(max_length=100,null=False)
     is_available = models.BooleanField(default=True)
     occupied_by_booking = models.CharField(max_length=100,null=True)
@@ -230,7 +245,7 @@ class ParkingSlot(models.Model):
     updated_at = models.DateTimeField(null=True)
 
     class Meta:
-        unique_together = ('parking_floor','slot_number')
+        unique_together = ('parking_slot_group','slot_number')
 
 # a model for setting the type of cars a parking slot can accomodate
 class ParkingSlot_VehicleType(models.Model):

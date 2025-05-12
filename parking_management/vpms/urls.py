@@ -31,6 +31,10 @@ urlpatterns = [
   path('sign_up',sign_up, name='sign_up'),
   path('verify-email/<uuid:token>', verify_email, name='verify_email'),
 
+  path('send_password_reset_email_phone',send_password_reset_email_phone, name='send_password_reset_email_phone'),
+  path('verify_reset_code', VerifyResetCodeView.as_view(), name='verify_reset_code'),
+  path('reset_password_phone',reset_password_phone,name='reset_password_phone'),
+
 
 
 
