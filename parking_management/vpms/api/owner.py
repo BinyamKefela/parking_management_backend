@@ -59,10 +59,11 @@ class OwnerDestroyView(generics.DestroyAPIView):
     lookup_field ='id'
 
     def destroy(self, request, *args, **kwargs):
-        Owner = self.get_object()
+        owner = self.get_object()
         if not Owner:
             return Response({"error":"Owner not found!"}, status=status.HTTP_404_NOT_FOUND)
-        Owner.delete()
+        owner.status="cancelled"
+        owner.save()
         #subscription_payment.save()
         return Response({"message":"Owner deleted successfully!"},status=status.HTTP_200_OK)
 
@@ -83,8 +84,11 @@ class OwnerCreateView(generics.CreateAPIView):
             user = User.objects.get(id=user_id)
         except:
             return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
+        if Owner.objects.filter(company_owner=user).count() > 0:
+            return Response({"error":"the user is already an owner"},status=status.HTTP_400_BAD_REQUEST)
         #checking whether there is a group with a name Owner in the system
         try:
+            user.groups.clear()
             user.groups.add(Group.objects.get(name='owner'))
         except:
             return Response({"error":"there is no role owner"},status=status.HTTP_400_BAD_REQUEST)
@@ -92,6 +96,5 @@ class OwnerCreateView(generics.CreateAPIView):
         if not user.groups.filter(name="owner").exists():
             return Response({"error": "the user you are assigning as an owner does not have a role of an owner, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
-
 
 
