@@ -12,8 +12,9 @@ from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import Group
+from rest_framework.decorators import api_view,permission_classes
 
-OWNER_AVAILABLE = "available"
+OWNER_ACTIVE = "active"
 OWNER_TRIAL = "trial"
 OWNER_SUSPENDED = "suspended"
 OWNER_CANCELLED = "cancelled"
@@ -63,6 +64,11 @@ class OwnerDestroyView(generics.DestroyAPIView):
         if not Owner:
             return Response({"error":"Owner not found!"}, status=status.HTTP_404_NOT_FOUND)
         owner.status="cancelled"
+        try:
+            user = User.objects.get(id=owner.user)
+            user.groups.remove(Group.objects.filter(name="owner"))
+        except:
+            return Response({"error":"There is no user with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
         owner.save()
         #subscription_payment.save()
         return Response({"message":"Owner deleted successfully!"},status=status.HTTP_200_OK)
@@ -85,7 +91,7 @@ class OwnerCreateView(generics.CreateAPIView):
         except:
             return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
         if Owner.objects.filter(company_owner=user).count() > 0:
-            return Response({"error":"the user is already an owner"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error":"the user is already an owner,check if the owner status"},status=status.HTTP_400_BAD_REQUEST)
         #checking whether there is a group with a name Owner in the system
         try:
             user.groups.clear()
@@ -96,5 +102,22 @@ class OwnerCreateView(generics.CreateAPIView):
         if not user.groups.filter(name="owner").exists():
             return Response({"error": "the user you are assigning as an owner does not have a role of an owner, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
+    
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def activate_owner(request):
+    owner_id = request.data.get('owner')
+    try:
+        owner = Owner.objects.get(id=owner_id)
+        user = owner.company_owner
+        if user.isActive == False:
+            return Response({"error":"there is no active user with the given user id"},status=status.HTTP_404_NOT_FOUND)
+    except:
+        return Response({"error":"there is no user associated with the given owner id"},status=status.HTTP_404_NOT_FOUND)
+    owner.status = OWNER_ACTIVE
+    return Response({"message":"owner activated successfully"},status=status.HTTP_200_OK)
+    
+    
 
 

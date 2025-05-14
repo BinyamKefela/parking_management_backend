@@ -101,6 +101,7 @@ class OwnerSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['company_owner'] = UserSerializer(instance.company_owner).data
+        representation['plan'] = PlanSerializer(instance.plan).data
         return representation
     
 class ZoneOwnerBankAccountSerializer(serializers.ModelSerializer):

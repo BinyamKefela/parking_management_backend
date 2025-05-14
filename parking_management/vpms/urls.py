@@ -74,6 +74,7 @@ urlpatterns = [
   path('post_owner',OwnerCreateView.as_view(),name='post_owner'),
   path('update_owner/<int:id>',OwnerUpdateView.as_view(),name='update_owner'),
   path('delete_owner/<int:id>',OwnerDestroyView.as_view(),name='delete_owner'),
+  path("ativate_owner", activate_owner, name="activate_owner"),
 
     #---------------------------------Subscription routes-------------------------------------------------------
 
