@@ -109,7 +109,7 @@ class OwnerCreateView(generics.CreateAPIView):
 def activate_owner(request):
     owner_id = request.data.get('owner')
     try:
-        owner = Owner.objects.get(id=owner_id)
+        owner = Owner.objects.get(pk=owner_id)
         user = owner.company_owner
         if user.isActive == False:
             return Response({"error":"there is no active user with the given user id"},status=status.HTTP_404_NOT_FOUND)
