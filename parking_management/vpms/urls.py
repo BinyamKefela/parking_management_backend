@@ -8,6 +8,17 @@ from .api.plan import *
 from .api.owner import *
 from .api.subscription import *
 from .api.zone_owner_bank_account import *
+from .api.vehicle import *
+from .api.vehicle_type import *
+from .api.parking_zone import *
+from .api.parking_zone_picture import *
+from .api.parking_floor import *
+from .api.parking_slot import *
+from .api.parking_slot_vehicle_type import *
+from .api.parking_slot_group import *
+from .api.booking import *
+from .api.staff import *
+
 
 
 
@@ -34,6 +45,8 @@ urlpatterns = [
   path('send_password_reset_email_phone',send_password_reset_email_phone, name='send_password_reset_email_phone'),
   path('verify_reset_code', VerifyResetCodeView.as_view(), name='verify_reset_code'),
   path('reset_password_phone',reset_password_phone,name='reset_password_phone'),
+
+  path("change_password",change_password,name="change_password"),
 
 
 
@@ -86,12 +99,110 @@ urlpatterns = [
 
       #---------------------------------Zone owner bank account routes-------------------------------------------------------
 
-  path('get_zone_owner_bank_accounts',ZoneOwnerBankAccountListView.as_view(),name='get_zone_owner_bank_account'),
+  path('get_zone_owner_bank_accounts',ZoneOwnerBankAccountListView.as_view(),name='get_zone_owner_bank_accounts'),
   path('get_zone_owner_bank_account/<int:id>',ZoneOwnerBankAccountRetrieveView.as_view(),name='get_zone_owner_bank_account'),
   path('post_zone_owner_bank_account',ZoneOwnerBankAccountCreateView.as_view(),name='post_zone_owner_bank_account'),
   path('update_zone_owner_bank_account/<int:id>',ZoneOwnerBankAccountUpdateView.as_view(),name='update_zone_owner_bank_account'),
   path('delete_zone_owner_bank_account/<int:id>',ZoneOwnerBankAccountDestroyView.as_view(),name='delete_zone_owner_bank_account'),
 
+
+#---------------------------------vehicle type routes-------------------------------------------------------
+
+  path('get_vehicle_types',VehicleTypeListView.as_view(),name='get_vehicle_types'),
+  path('get_vehicle_type/<int:id>',VehicleTypeRetrieveView.as_view(),name='get_vehicle_type'),
+  path('post_vehicle_type',VehicleTypeCreateView.as_view(),name='post_vehicle_type'),
+  path('update_vehicle_type/<int:id>',VehicleTypeUpdateView.as_view(),name='update_vehicle_type'),
+  path('delete_vehicle_type/<int:id>',VehicleTypeDestroyView.as_view(),name='delete_vehicle_type'),
+
+
+
+#---------------------------------vehicle routes-------------------------------------------------------
+
+  path('get_vehicles',VehicleListView.as_view(),name='get_vehicle'),
+  path('get_vehicle/<int:id>',VehicleRetrieveView.as_view(),name='get_vehicle'),
+  path('post_vehicle',VehicleCreateView.as_view(),name='post_vehicle'),
+  path('update_vehicle/<int:id>',VehicleUpdateView.as_view(),name='update_vehicle'),
+  path('delete_vehicle/<int:id>',VehicleDestroyView.as_view(),name='delete_vehicle'),
+
+
+
+  #---------------------------------Parking zone routes-------------------------------------------------------
+
+  path('get_parking_zones',ParkingZoneListView.as_view(),name='get_parking_zones'),
+  path('get_parking_zone/<int:id>',ParkingZoneRetrieveView.as_view(),name='get_parking_zone'),
+  path('post_parking_zone',ParkingZoneCreateView.as_view(),name='post_parking_zone'),
+  path('update_parking_zone/<int:id>',ParkingZoneUpdateView.as_view(),name='update_parking_zone'),
+  path('delete_parking_zone/<int:id>',ParkingZoneDestroyView.as_view(),name='delete_parking_zone'),
+
+
+  #---------------------------------Parking zone picture routes-------------------------------------------------------
+
+  path('get_parking_zone_pictures',ParkingZonePictureListView.as_view(),name='get_parking_zone_pictures'),
+  path('get_parking_zone_picture/<int:id>',ParkingZonePictureRetrieveView.as_view(),name='get_parking_zone_picture'),
+  path('post_parking_zone_picture',ParkingZonePictureCreateView.as_view(),name='post_parking_zone'),
+  path('update_parking_zone_picture/<int:id>',ParkingZonePictureUpdateView.as_view(),name='update_parking_zone_picture'),
+  path('delete_parking_zone_picture/<int:id>',ParkingZonePictureDestroyView.as_view(),name='delete_parking_zone_picture'),
+
+
+      #---------------------------------Parking floor routes-------------------------------------------------------
+
+  path('get_parking_floors',ParkingFloorListView.as_view(),name='get_parking_floors'),
+  path('get_parking_floor/<int:id>',ParkingFloorRetrieveView.as_view(),name='get_parking_floor'),
+  path('post_parking_floor',ParkingFloorCreateView.as_view(),name='post_parking_floor'),
+  path('update_parking_floor/<int:id>',ParkingFloorUpdateView.as_view(),name='update_parking_floor'),
+  path('delete_parking_floor/<int:id>',ParkingFloorDestroyView.as_view(),name='delete_parking_floor'),
+
+
+   #---------------------------------Parking slot vehicle type routes-------------------------------------------------------
+
+  path('get_parking_slot_vehicle_types',ParkingSlot_VehicleTypeListView.as_view(),name='get_parking_slot_vehicle_types'),
+  path('get_parking_slot_vehicle_type/<int:id>',ParkingSlot_VehicleTypeRetrieveView.as_view(),name='get_parking_slot_vehicle_type'),
+  path('post_parking_slot_vehicle_type',ParkingSlot_VehicleTypeCreateView.as_view(),name='post_parking_slot_vehicle_type'),
+  path('update_parking_slot_vehicle_type/<int:id>',ParkingSlot_VehicleTypeUpdateView.as_view(),name='update_parking_slot_vehicle_type'),
+  path('delete_parking_slot_vehicle_type/<int:id>',ParkingSlot_VehicleTypeDestroyView.as_view(),name='delete_parking_slot_vehicle_type'),
+
+
+
+  #---------------------------------Parking slot routes-------------------------------------------------------
+
+  path('get_parking_slots',ParkingSlotListView.as_view(),name='get_parking_slots'),
+  path('get_parking_slot/<int:id>',ParkingSlotRetrieveView.as_view(),name='get_parking_slot'),
+  path('post_parking_slot',ParkingSlotCreateView.as_view(),name='post_parking_slot'),
+  path('update_parking_slot/<int:id>',ParkingSlotUpdateView.as_view(),name='update_parking_slot'),
+  path('delete_parking_slot/<int:id>',ParkingSlotDestroyView.as_view(),name='delete_parking_slot'),
+
+
+
+   #---------------------------------Parking slot group routes-------------------------------------------------------
+
+  path('get_parking_slot_groups',ParkingSlotGroupListView.as_view(),name='get_parking_slot_groups'),
+  path('get_parking_slot_group/<int:id>',ParkingSlotGroupRetrieveView.as_view(),name='get_parking_slot_group'),
+  path('post_parking_slot_group',ParkingSlotGroupCreateView.as_view(),name='post_parking_slot_group'),
+  path('update_parking_slot_group/<int:id>',ParkingSlotGroupUpdateView.as_view(),name='update_parking_slot_group'),
+  path('delete_parking_slot_group/<int:id>',ParkingSlotGroupDestroyView.as_view(),name='delete_parking_slot_group'),
+
+
+
+     #---------------------------------booking routes-------------------------------------------------------
+
+  path('get_bookings',BookingListView.as_view(),name='get_bookings'),
+  path('get_booking/<int:id>',BookingRetrieveView.as_view(),name='get_booking'),
+  path('post_booking',BookingCreateView.as_view(),name='post_booking'),
+  path('update_booking/<int:id>',BookingUpdateView.as_view(),name='update_booking'),
+  path('delete_booking/<int:id>',BookingDestroyView.as_view(),name='delete_booking'),
+  path('cancel_booking',cancel_booking,name="cancel_booking"),
+
+  path('calculate-price/', CalculatePriceView.as_view(), name='calculate-price'),
+  
+
+  
+  #---------------------------------staff routes-------------------------------------------------------
+
+  path('get_staffs',StaffListView.as_view(),name='get_staffs'),
+  path('get_staff/<int:id>',StaffRetrieveView.as_view(),name='get_staff'),
+  path('post_staff',create_staff,name='post_staff'),
+  path('update_staff/<int:id>',StaffUpdateView.as_view(),name='update_staff'),
+  path('delete_staff/<int:id>',StaffDestroyView.as_view(),name='delete_staff'),
 
   
 

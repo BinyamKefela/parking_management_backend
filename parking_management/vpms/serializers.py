@@ -132,6 +132,18 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
         representation['zone_owner'] = UserSerializer(instance.zone_owner).data
         return representation
     
+
+class ParkingZonePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingZonePicture
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
+        return representation
+    
+    
 class ParkingFloorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParkingFloor
@@ -145,6 +157,17 @@ class ParkingFloorSerializer(serializers.ModelSerializer):
 class ParkingSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParkingSlot
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['parking_slot_group'] = ParkingSlotGroupSerializer(instance.parking_slot_group).data
+        return representation
+
+   
+class ParkingSlotGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlotGroup
         fields = "__all__"
 
     def to_representation(self, instance):
@@ -237,6 +260,7 @@ class PricingRuleSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance) 
         representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
+        representation['vehicle_type'] = VehicleTypeSerializer(instance.vehicle_type).data
         return representation
     
 class BookingSerializer(serializers.ModelSerializer):
@@ -249,3 +273,13 @@ class BookingSerializer(serializers.ModelSerializer):
         representation['parking_slot'] = ParkingSlotSerializer(instance.parking_slot).data
         representation['vehicle'] = VehicleSerializer(instance.vehicle).data
         return representation
+    
+
+
+
+
+class PricingCalculationSerializer(serializers.Serializer):
+    parking_zone_id = serializers.IntegerField()
+    vehicle_type_id = serializers.IntegerField()
+    start_datetime = serializers.DateTimeField()
+    end_datetime = serializers.DateTimeField()

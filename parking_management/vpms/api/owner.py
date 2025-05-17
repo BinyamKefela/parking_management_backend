@@ -52,6 +52,17 @@ class OwnerUpdateView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     lookup_field = 'id'
 
+    '''def update(self, request, *args, **kwargs):
+        user = request.user
+        company_owner_id = request.data.get("company_owner")
+        try:
+            company_owner = User.data.get(id=company_owner_id)
+        except:
+            return Response({"error":"there is no user with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
+        if (not company_owner.pk==user.pk) and (not user.is_superuser):
+            return Response({"error":"the given owner has not logged in"},status=status.HTTP_400_BAD_REQUEST)
+        return super().update(request, *args, **kwargs)'''
+
 
 class OwnerDestroyView(generics.DestroyAPIView):
     queryset = Owner.objects.all()

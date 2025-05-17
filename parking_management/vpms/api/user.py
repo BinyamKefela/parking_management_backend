@@ -32,6 +32,7 @@ from rest_framework.views import APIView
 load_dotenv()
 
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+SITE_URL = settings.SITE_URL
 
 User = get_user_model()
 
@@ -187,6 +188,23 @@ def reset_password(request,token):
     return Response({"message":"password reset successfully!"},status=status.HTTP_200_OK)
 
 
+# an API for the owner to change his password
+@api_view(["POST"])
+@permission_classes([])
+def change_password(request):
+    old_password = request.data.get("old_password")
+    new_password = request.data.get("new_password")
+    user = request.user
+
+    if not user.check_password(old_password):
+        return Response({"error":"wrong old password!"},status=status.HTTP_400_BAD_REQUEST)
+    user.set_password(new_password)
+    user.save()
+    return Response({"message":"password changed successfully!"},status=status.HTTP_200_OK)
+    
+
+
+
 #an API for sending a reset code to the user's email
 @api_view(["POST"])
 @permission_classes([])
@@ -200,6 +218,9 @@ def send_password_reset_email_phone(request):
         return Response({"error":"there is no user with the provided email"},status=status.HTTP_404_NOT_FOUND)
     code = f"{random.randint(1000, 9999)}"
     EmailVerification.objects.create(email=email,code=code)
+
+    refresh = RefreshToken.for_user(user)
+    token = str(refresh.access_token)
 
     current_site = get_current_site(request)
     dummy_site = "http://localhost:3000/en/reset-password/" + f'{token}'
@@ -274,13 +295,13 @@ def get_user_profile(request):
         user = User.objects.get(id=access_token['user_id'])
         
         if user.profile_picture and hasattr(user.profile_picture, 'url'):
-           profile_pic_url = settings.SITE_URL+str(user.profile_picture.url)
+           profile_pic_url = SITE_URL+str(user.profile_picture.url)
         else:
            profile_pic_url = None
     except User.DoesNotExist:
         return Response({"error": "Invalid or expired token"},status=status.HTTP_400_BAD_REQUEST)
     return Response({"user_id":user.pk,"first_name":user.first_name,"middle_name":user.middle_name,
-                     "last_name":user.last_name,"email":user.email,"user_permissions":user.get_all_permissions(),
+                     "last_name":user.last_name,"email":user.email,"phone_number":user.phone_number,"user_permissions":user.get_all_permissions(),
                      "groups":user.groups.values_list('name',flat=True),"profile_picture":profile_pic_url},status=status.HTTP_200_OK)
 
 
@@ -289,10 +310,11 @@ def get_user_profile(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user(request,id):
-    if not request.user.has_perm("change_user"):
-        return Response({"message":"Unauthorized accesss!"},status=status.HTTP_401_UNAUTHORIZED)
+    
     try:
         user = User.objects.get(id=id)
+        if not (request.user.id == user.id) and (not request.user.is_superuser):
+            return Response({"message":"Unauthorized accesss!"},status=status.HTTP_401_UNAUTHORIZED)
     except:
         return Response({"error":"user with the given id does not exist!"},status=status.HTTP_400_BAD_REQUEST)
     user_permissions = request.data.get("user_permissions",[])

@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import PricingRule,ParkingSlot,VehicleType
+from ..models import PricingRule,ParkingSlot,VehicleType,ParkingZone
 from ..serializers import PricingRuleSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -66,14 +66,14 @@ class PricingRuleCreateView(generics.CreateAPIView):
 
 
     def create(self, request, *args, **kwargs):
+        parking_zone_id = request.data.get('parking_zone')
         vehicle_type_id = request.data.get('vehicle_type')
-        parking_slot_id = request.data.get('parking_slot')
         try:
-            vehicle_type = VehicleType.objects.get(pk=vehicle_type_id)
+            parking_zone = ParkingZone.objects.get(pk=parking_zone_id)
         except:
             return Response({"error":"there is no vehicle type with the given vehicle id"},status=status.HTTP_404_NOT_FOUND)
         try:
-            parking_slot = ParkingSlot.objects.get(pk=parking_slot_id)
+            vehicle_type = VehicleType.objects.get(pk=vehicle_type_id)
         except:
-            return Response({"error":"there is no parking slot with the given parking slot id"},status=status.HTTP_404_NOT_FOUND)
+            return Response({"error":"there is no vehicle type with the given vehicle type id"},status=status.HTTP_404_NOT_FOUND)
         return super().create(request, *args, **kwargs)

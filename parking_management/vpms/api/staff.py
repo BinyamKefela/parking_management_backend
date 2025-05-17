@@ -32,15 +32,15 @@ class StaffListView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        owner_id = self.kwargs.get('owner_id')
+        owner = self.request.user
         try:
-            user = User.objects.get(pk=owner_id)
+            user = owner
             if not user.groups.filter(name='owner').exists():
                 return Response({"error":"there is no owner with the given id"},status=status.HTTP_404_NOT_FOUND)
         except:
             return Response({"error":"there is no user wth the given id"},status=status.HTTP_404_NOT_FOUND)
         queryset = super().get_queryset()
-        queryset.filter(owner=owner_id)
+        queryset.filter(owner=owner)
         return queryset
 
 
@@ -59,6 +59,28 @@ class StaffUpdateView(generics.UpdateAPIView):
     serializer_class = StaffSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     lookup_field = 'id'
+
+    def update(self, request, *args, **kwargs):
+        owner = request.user
+        try:
+            staff = Staff.objects.get(pk=request.data.get('staff'))
+        except:
+            return Response({"error":"there is no staff witht the given staff id"},status=status.HTTP_404_NOT_FOUND)
+        
+        if not staff.owner == owner:
+            return Response({"error":"the given owner is not the owner of the given staff user"},status=status.HTTP_400_BAD_REQUEST)
+
+        first_name = request.data.get('first_name',None)
+        middle_name = request.data.get('middle_name',None)
+        last_name = request.data.get('last_name',None)
+        phone_nummber = request.data.get('phone_number',None)
+        if first_name: staff.staff_user.first_name = first_name
+        if middle_name: staff.staff_user.middle_name = middle_name
+        if last_name: staff.staff_user.last_name = last_name
+        if phone_nummber: staff.staff_user.phone_number = phone_nummber
+
+        staff.save()
+        return Response(StaffSerializer(staff).data,status=status.HTTP_200_OK)
 
 
 class StaffDestroyView(generics.DestroyAPIView):
@@ -82,24 +104,32 @@ class StaffDestroyView(generics.DestroyAPIView):
 
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_staff(request,owner_id,email,first_name,middle_name,last_name,password):
-    try:
-        owner = User.objects.get(pk=owner_id)
-    except:
-        return Response({"error":"There is no user with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
+def create_staff(request):
+    
+    owner = request.user
+    #checking whether the user is an owner
     if not owner.groups.filter(name='owner').exists():
         return Response({"error":"There is no owner with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
-    
+    email = request.data.get('email')
+    first_name = request.data.get('first_name')
+    middle_name = request.data.get("middle_name")
+    last_name = request.data.get("last_name")
+    password = request.data.get("password")
+    phone_number = request.data.get("phone_number")
+
+    if not all([email, first_name, last_name, password]):
+        return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
+
     staff_user = User()
     staff_user.email = email
     staff_user.first_name = first_name
     staff_user.middle_name = middle_name
     staff_user.last_name = last_name
+    staff_user.phone_number = phone_number
     groups = Group.objects.filter(name='staff')
-    staff_user.groups.clear()
-    staff_user.groups.set(groups)
+    
     staff_user.set_password(password)
     staff_user.save()
 
@@ -108,7 +138,7 @@ def create_staff(request,owner_id,email,first_name,middle_name,last_name,passwor
     staff.owner = owner
     staff.save()
 
-    return Response({"message":"successfully created user"},status=status.HTTP_200_OK)
+    staff_user.groups.clear()
+    staff_user.groups.set(groups)
 
-
-      
+    return Response({"message":"successfully created user"},status=status.HTTP_200_OK)      

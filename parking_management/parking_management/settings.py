@@ -191,6 +191,8 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
+SITE_URL = "http://192.168.0.178"
+
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

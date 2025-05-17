@@ -150,6 +150,9 @@ class Plan(models.Model):
 class Owner(models.Model):
     company_owner = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     company_name = models.CharField(max_length=200,null=False)
+    company_email = models.CharField(max_length=200,null=True)
+    company_phone_number = models.CharField(max_length=200,null=True)
+    company_address = models.CharField(max_length=200,null=True)
     plan = models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
     primary_color = models.CharField(max_length=100,null=True)
     language = models.CharField(max_length=100,null=True)
@@ -216,6 +219,28 @@ class ParkingZone(models.Model):
     class Meta:
         unique_together = ('zone_owner','name')
 
+
+
+
+def validate_parking_zone_picture(value):
+    valid_extensions = ['.png','.jpg','.jpeg','.PNG','.JPG','.JPEG']
+    ext = os.path.splitext(value.name)[1]
+    if not ext in valid_extensions:
+        raise ValidationError('Unsupported filed extension')
+        
+
+def get_parking_zone_image_upload_path(instance,filename):
+    new_file_name = "parking_zones/"+f'{filename}'
+    return new_file_name
+
+
+class ParkingZonePicture(models.Model):
+    parking_zone = models.ForeignKey(ParkingZone,null=True,on_delete=models.SET_NULL)
+    description = models.CharField(max_length=200,null=True)
+    image = models.FileField(upload_to=get_parking_zone_image_upload_path,validators=[validate_parking_zone_picture],null=True,blank=True)
+
+
+
 class ParkingFloor(models.Model):
     zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
     floor_number = models.CharField(max_length=100)
@@ -268,7 +293,8 @@ class Vehicle(models.Model):
 
 class PricingRule(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
-    rule_name = models.CharField(max_length=100)
+    vehicle_type = models.ForeignKey(VehicleType,null=True,on_delete=models.SET_NULL)
+    rule_name = models.CharField(max_length=100,null=True)
     rate_type = models.CharField(max_length=100,choices=(('minute','minute'),('hourly','hourly'),
                                                          ('daily','daily')))
     rate = models.FloatField(null=False)
@@ -281,6 +307,10 @@ class PricingRule(models.Model):
     is_enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
+
+
+    class Meta:
+        unique_together = ('parking_zone','vehicle_type','start_time','end_time','day_of_week')
 
 
 
@@ -326,6 +356,7 @@ class Notification(models.Model):
 class NotificationUser(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     notification = models.ForeignKey(Notification,on_delete=models.SET_NULL,null=True)
+
 
 
 
