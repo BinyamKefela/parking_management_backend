@@ -22,11 +22,16 @@ class ParkingZoneListView(generics.ListAPIView):
     serializer_class = ParkingZoneSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = [field.name for field in ParkingZone._meta.fields]
+    filterset_fields = {
+    'name': ['exact', 'icontains'],
+    'address': ['exact', 'icontains'],
+    'zone_owner__email':['exact']
+    }
+    search_fields = ["name","address"]
     ordering_fields = [field.name for field in ParkingZone._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination
+    
 
 
 
@@ -72,12 +77,12 @@ class ParkingZoneCreateView(generics.CreateAPIView):
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        user_id = ParkingZone.objects.get(request.data.get('zone_id')).zone.zone_owner.pk
+        #user_id = ParkingZone.objects.get(id=request.data.get('zone_id')).zone.zone_owner.pk
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.get(id=request.data.get('zone_owner'))
         except:
             return Response({"error":"there is no owner associated with the given zone id"},status=status.HTTP_404_NOT_FOUND)
-        if user.groups.filter(name="owner").exists():
+        if not user.groups.filter(name="owner").exists():
             return Response({"error": "the user you are trying to create a ParkingZone for does not have a role of an owner, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
 

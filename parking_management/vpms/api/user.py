@@ -91,7 +91,6 @@ class UserCreateView(generics.CreateAPIView):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
 def activate_user(request,id):
     try:
         user = User.objects.get(pk=id)

@@ -16,6 +16,8 @@ from datetime import timedelta
 
 import uuid
 
+SITE_URL = settings.SITE_URL
+
 
 def validate_uploaded_image_extension(value):
     valid_extensions = ['.png','.jpg','.jpeg','.PNG','.JPG','.JPEG']
@@ -26,7 +28,7 @@ def validate_uploaded_image_extension(value):
 
 def get_upload_path(instance,filename):
     ext = filename.split('.')[-1]
-    new_file_name = "profiles/"+f'{instance.id}.{ext}'
+    new_file_name = SITE_URL+"/profiles/"+f'{instance.id}.{ext}'
     return new_file_name
 
 

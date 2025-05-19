@@ -27,7 +27,7 @@ DEBUG = True
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-ALLOWED_HOSTS = ['192.168.0.165','192.168.0.178','localhost','192.168.0.101']
+ALLOWED_HOSTS = ['192.168.0.165','192.168.0.178','localhost','192.168.0.101','127.0.0.1']
 
 
 # Application definition
@@ -191,7 +191,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
-SITE_URL = "http://192.168.0.178"
+SITE_URL = "https://api.astedaderpms.com"
 
 
 

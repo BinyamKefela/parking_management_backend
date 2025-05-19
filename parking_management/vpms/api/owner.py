@@ -28,8 +28,19 @@ class OwnerListView(generics.ListAPIView):
     serializer_class = OwnerSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = ["field.name for field in Owner._meta.fields"]
+    filterset_fields = {
+    'company_name': ['exact', 'icontains'],
+    'company_email': ['exact', 'icontains'],
+    'company_phone_number': ['exact', 'icontains'],
+    'company_address': ['exact', 'icontains'],
+    'status': ['exact'],
+    'company_owner__email': ['exact', 'icontains'],
+    'company_owner__first_name': ['icontains'],
+    'company_owner__last_name': ['icontains'],
+    'plan': ['exact'],
+    'created_at': ['date', 'date__gte', 'date__lte'],}
+    
+    search_fields = ["company_owner__email","company_name","company_email","company_phone_number","company_address"]
     ordering_fields = [field.name for field in Owner._meta.fields]
     ordering = ['id']
     lookup_field = 'id'
@@ -72,17 +83,19 @@ class OwnerDestroyView(generics.DestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         owner = self.get_object()
-        if not Owner:
+        if not owner:
             return Response({"error":"Owner not found!"}, status=status.HTTP_404_NOT_FOUND)
         owner.status="cancelled"
         try:
-            user = User.objects.get(id=owner.user)
-            user.groups.remove(Group.objects.filter(name="owner"))
+            user = owner.company_owner
+            #user.groups.remove(Group.objects.filter(name="owner"))
+            user.is_active = False
+            user.save()
         except:
             return Response({"error":"There is no user with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
         owner.save()
         #subscription_payment.save()
-        return Response({"message":"Owner deleted successfully!"},status=status.HTTP_200_OK)
+        return Response({"message":"Owner deactivated successfully!"},status=status.HTTP_200_OK)
 
 
 class OwnerCreateView(generics.CreateAPIView):
@@ -122,7 +135,7 @@ def activate_owner(request):
     try:
         owner = Owner.objects.get(pk=owner_id)
         user = owner.company_owner
-        if user.isActive == False:
+        if user.is_active == False:
             return Response({"error":"there is no active user with the given user id"},status=status.HTTP_404_NOT_FOUND)
     except:
         return Response({"error":"there is no user associated with the given owner id"},status=status.HTTP_404_NOT_FOUND)
