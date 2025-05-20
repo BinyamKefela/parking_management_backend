@@ -72,7 +72,10 @@ class ParkingFloorCreateView(generics.CreateAPIView):
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        user_id = ParkingFloor.objects.get(zone=request.data.get('zone')).zone.zone_owner.pk
+        try:
+           user_id = ParkingZone.objects.get(id=request.data.get('zone')).zone_owner.pk
+        except:
+           return Response({"error":"there is no parking zone associated with the given zone id"},status=status.HTTP_404_NOT_FOUND) 
         #checking whether there is a user associated with the parking floor's parking zone
         try:
             user = User.objects.get(id=user_id)

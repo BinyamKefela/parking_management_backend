@@ -135,8 +135,10 @@ def activate_owner(request):
     try:
         owner = Owner.objects.get(pk=owner_id)
         user = owner.company_owner
-        if user.is_active == False:
+        if not user:
             return Response({"error":"there is no active user with the given user id"},status=status.HTTP_404_NOT_FOUND)
+        user.is_active=True
+        user.save()
     except:
         return Response({"error":"there is no user associated with the given owner id"},status=status.HTTP_404_NOT_FOUND)
     owner.status = OWNER_ACTIVE
