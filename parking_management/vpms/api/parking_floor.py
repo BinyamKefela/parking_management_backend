@@ -75,14 +75,14 @@ class ParkingFloorCreateView(generics.CreateAPIView):
         try:
            user_id = ParkingZone.objects.get(id=request.data.get('zone')).zone_owner.pk
         except:
-           return Response({"error":"there is no parking zone associated with the given zone id"},status=status.HTTP_404_NOT_FOUND) 
+           return Response({"error":"there is no user associated with the given zone id"},status=status.HTTP_404_NOT_FOUND) 
         #checking whether there is a user associated with the parking floor's parking zone
         try:
             user = User.objects.get(id=user_id)
         except:
             return Response({"error":"there is no owner associated with the given zone id"},status=status.HTTP_404_NOT_FOUND)
         #checking whether there is an owner associated with the parking floor's parking zone
-        if user.groups.filter(name="owner").exists():
+        if not user.groups.filter(name="owner").exists():
             return Response({"error": "the user you are trying to create a ParkingFloor for does not have a role of an owner, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
 

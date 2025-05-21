@@ -359,6 +359,17 @@ class NotificationUser(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     notification = models.ForeignKey(Notification,on_delete=models.SET_NULL,null=True)
 
+class FavoriteZones(models.Model):
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
+
+
+class ZoneUtitlities(models.SET_NULL):
+    parking_zone = models.ForeignKey(ParkingZone)
+    wifi = models.BooleanField(default=False)
+    cctv = models.BooleanField(default=False)
+    charger = models.BooleanField(default=False)
+
 
 
 

@@ -409,6 +409,8 @@ def create_staff(request,owner_id,email,first_name,middle_name,last_name,passwor
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def sign_up(request):
+        if User.objects.filter(email=request.data.get("email")).count()>0:
+            return Response({"error":"This email already exists in the system"},status=status.HTTP_403_FORBIDDEN)
         serializer = UserSerializer(data=request.data)
     #if serializer.is_valid():
         #if the user already signed up but didn't verify his account, delete verfication UUID's
@@ -428,9 +430,9 @@ def sign_up(request):
             #if serializer.is_valid():
             #    user = serializer.save(is_active=False)  # Initially set user as inactive
             verification = EmailVerification.objects.create(user=user)
-        current_site = "localhost:8000"
+        current_site = request.build_absolute_uri('/')
         mail_subject = 'Verify your email address'
-        relative_link = reverse('verify_email', kwargs={'token': str(verification.token)})
+        relative_link = "api/verify-email/"+str(verification.token)#reverse('verify_email', kwargs={'token': str(verification.token)})
         absolute_url = f'http://{current_site}{relative_link}'  # Adjust protocol if needed
         message = f'Hi ,\n\nPlease click on the link below to verify your email address and complete your signup:\n\n{absolute_url}'
         send_mail(mail_subject, message, EMAIL_HOST_USER, [request.data.get("email")])
@@ -452,9 +454,4 @@ def verify_email(request, token):
             return Response({'message': 'Your email has already been verified.'}, status=status.HTTP_200_OK)
     except EmailVerification.DoesNotExist:
         return Response({'error': 'Invalid verification link.'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
    
-    
-    

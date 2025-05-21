@@ -130,7 +130,21 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['zone_owner'] = UserSerializer(instance.zone_owner).data
+        representation["parking_floors"] = ParkingFloorSerializer(ParkingFloor.objects.filter(zone=instance.id),many=True).data
         return representation
+    
+class ParkingZoneSerializerDummy(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingZone
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        #representation['zone_owner'] = UserSerializer(instance.zone_owner).data
+        representation["parking_floors"] = ParkingFloorSerializer(ParkingFloor.objects.filter(zone=instance.id),many=True).data
+        return representation
+    
+    
     
 
 class ParkingZonePictureSerializer(serializers.ModelSerializer):
@@ -151,7 +165,8 @@ class ParkingFloorSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['zone'] = ParkingZoneSerializer(instance.zone).data
+        #representation['zone'] = ParkingZoneSerializerDummy(instance.zone).data
+        representation['parking_slot_groups'] = ParkingSlotGroupSerializerDummy(ParkingSlotGroup.objects.filter(Parking_floor=instance.id),many=True).data
         return representation
     
 class ParkingSlotSerializer(serializers.ModelSerializer):
@@ -164,6 +179,12 @@ class ParkingSlotSerializer(serializers.ModelSerializer):
         representation['parking_slot_group'] = ParkingSlotGroupSerializer(instance.parking_slot_group).data
         return representation
 
+  
+class ParkingSlotGroupSerializerDummy(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlotGroup
+        fields = "__all__"
+
    
 class ParkingSlotGroupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -173,6 +194,8 @@ class ParkingSlotGroupSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['parking_floor'] = ParkingFloorSerializer(instance.parking_floor).data
+        representation['parking_slot'] = ParkingSlotSerializer(ParkingSlot.objects.filter(Parking_slot_group=instance.id),many=True).data
+
         return representation
         
 
