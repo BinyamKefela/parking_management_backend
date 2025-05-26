@@ -22,8 +22,12 @@ class ParkingSlotGroupListView(generics.ListAPIView):
     serializer_class = ParkingSlotGroupSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = [field.name for field in ParkingSlotGroup._meta.fields]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'parking_floor__zone__zone_owner__id': ['exact'],
+    'name':['exact','icontains']
+    }
+    search_fields = ["parking_floor__floor_number","name"]
     ordering_fields = [field.name for field in ParkingSlotGroup._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination

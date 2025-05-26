@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import ParkingSlot,ParkingZone
+from ..models import ParkingSlot,ParkingSlotGroup
 from ..serializers import ParkingSlotSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -22,8 +22,16 @@ class ParkingSlotListView(generics.ListAPIView):
     serializer_class = ParkingSlotSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = [field.name for field in ParkingSlot._meta.fields]
+    #filterset_fields = '__all__'
+    #search_fields = [field.name for field in ParkingSlot._meta.fields]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'parking_slot_group__parking_floor__zone__zone_owner__id':['exact'],
+    'parking_slot_group__name': ['exact','icontains'],
+    'slot_number':['exact'],
+    'occupied_by_booking':['exact','icontains']
+    }
+    search_fields = ["parking_slot_group__name","slot_number","occupied_by_booking"]
     ordering_fields = [field.name for field in ParkingSlot._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination
@@ -73,17 +81,13 @@ class ParkingSlotCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         try:
-            user_id = ParkingSlot.objects.get(parking_floor=request.data.get('parking_floor')).zone.zone_owner.pk
+            parking_slot_group = ParkingSlotGroup.objects.get(id=request.data.get('parking_slot_group'))
         except:
-            return Response({"error":"there is no parking floor with the given parking floor id"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error":"there is no parking slot group with the given parking slot group id"},status=status.HTTP_400_BAD_REQUEST)
         #checking whether there is a user for the parking slot's parking floor's parking slot
-        try:
-            user = User.objects.get(id=user_id)
-        except:
-            return Response({"error":"there is no owner associated with the given parking floor id"},status=status.HTTP_404_NOT_FOUND)
+        
         #checking whether there is an owner for the parking slot's parking floor's parking slot
-        if user.groups.filter(name="owner").exists():
-            return Response({"error": "the user you are trying to create a ParkingSlot for does not have a role of an owner, please assign role first."}, status=status.HTTP_403_FORBIDDEN)
+        
         return super().create(request, *args, **kwargs)
 
 

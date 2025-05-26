@@ -259,7 +259,7 @@ class VehicleType(models.Model):
     name = models.CharField(max_length=100,unique=True,null=False)
 
 class ParkingSlotGroup(models.Model):
-    Parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
+    parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
     name = models.CharField(max_length=100,null=False,unique=True)
 
 
@@ -364,8 +364,8 @@ class FavoriteZones(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
 
 
-class ZoneUtitlities(models.SET_NULL):
-    parking_zone = models.ForeignKey(ParkingZone)
+class ZoneUtitlities(models.Model):
+    parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
     wifi = models.BooleanField(default=False)
     cctv = models.BooleanField(default=False)
     charger = models.BooleanField(default=False)

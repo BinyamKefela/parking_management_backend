@@ -22,8 +22,14 @@ class ParkingFloorListView(generics.ListAPIView):
     serializer_class = ParkingFloorSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = [field.name for field in ParkingFloor._meta.fields]
+    #filterset_fields = '__all__'
+    #search_fields = [field.name for field in ParkingFloor._meta.fields]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'floor_number': ['exact', 'icontains'],
+    'zone__name':['exact']
+    }
+    search_fields = ["floor_number","zone__name"]
     ordering_fields = [field.name for field in ParkingFloor._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination
