@@ -37,6 +37,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
     
 class UserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
     password = serializers.CharField(write_only=True, required=False)
     user_permissions = serializers.SlugRelatedField(slug_field="codename",queryset=Permission.objects.all(),many=True,required=False)
     groups = serializers.SlugRelatedField(slug_field="name",queryset=Group.objects.all(),many=True,required=False)
@@ -79,6 +80,16 @@ class UserSerializer(serializers.ModelSerializer):
 
         return representation
     
+    def get_profile_picture(self,obj):
+        request = self.context.get('request')
+        if obj.profile_picture and request:
+            return request.build_absolute_uri(obj.profile_picture.url)
+        elif obj.profile_picture:
+            # fallback if no request is available
+            from django.conf import settings
+            return settings.SITE_URL + obj.profile_picture.url
+        return None
+    
 class GroupSerializer(serializers.ModelSerializer):
     permissions = serializers.SlugRelatedField(slug_field="codename",queryset=Permission.objects.all(),many=True,required=False)
 
@@ -120,6 +131,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['owner'] = OwnerSerializer(instance.owner).data
+        representation['plan'] = PlanSerializer(instance.plan).data if instance.plan else None
         return representation
     
 class ParkingZoneSerializer(serializers.ModelSerializer):
@@ -131,6 +143,7 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['zone_owner'] = UserSerializer(instance.zone_owner).data
         representation["parking_floors"] = ParkingFloorSerializer(ParkingFloor.objects.filter(zone=instance.id),many=True).data
+        representation['parking_zone_pictures'] = ParkingZonePictureSerializerDummy(ParkingZonePicture.objects.filter(parking_zone=instance.id),many=True).data
         return representation
     
 class ParkingZoneSerializerDummy(serializers.ModelSerializer):
@@ -148,6 +161,7 @@ class ParkingZoneSerializerDummy(serializers.ModelSerializer):
     
 
 class ParkingZonePictureSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
     class Meta:
         model = ParkingZonePicture
         fields = "__all__"
@@ -156,6 +170,34 @@ class ParkingZonePictureSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
         return representation
+    
+    def get_image(self,obj):
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        elif obj.image:
+            # fallback if no request is available
+            from django.conf import settings
+            return settings.SITE_URL + obj.image.url
+        return None
+
+
+class ParkingZonePictureSerializerDummy(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    class Meta:
+        model = ParkingZonePicture
+        fields = "__all__"
+    def get_image(self,obj):
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        elif obj.image:
+            # fallback if no request is available
+            from django.conf import settings
+            return settings.SITE_URL + obj.image.url
+        return None
+
+    
     
     
 class ParkingFloorSerializer(serializers.ModelSerializer):
@@ -166,7 +208,7 @@ class ParkingFloorSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['zone'] = ParkingZoneSerializerDummy(instance.zone).data
-        representation['parking_slot_groups'] = ParkingSlotGroupSerializerDummy(ParkingSlotGroup.objects.filter(parking_floor=instance.id),many=True).data
+        representation['parking_slot_groups'] = ParkingSlotGroupSerializerDummyDummy(ParkingSlotGroup.objects.filter(parking_floor=instance.id),many=True).data
         return representation
     
 
@@ -188,14 +230,47 @@ class ParkingSlotSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['parking_slot_group'] = ParkingSlotGroupSerializerDummy(instance.parking_slot_group).data
+        
+        representation['parking_slot_vehicle_types'] = ParkingSlot_VehicleTypeSerializerDummy(ParkingSlot_VehicleType.objects.filter(parking_slot=instance.id),many=True).data
         return representation
+    
+
+class ParkingSlotSerializerDummy(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlot
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['parking_slot_groups'] = ParkingSlotGroupSerializerDummyDummy(ParkingSlot.objects.filter(id=instance.parking_slot_group),many=True).data
+        #representation['parking_slot_group'] = ParkingSlotGroupSerializerDummy(instance.parking_slot_group).data
+        representation['parking_slot_vehicle_types'] = ParkingSlot_VehicleTypeSerializerDummy(ParkingSlot_VehicleType.objects.filter(parking_slot=instance.id),many=True).data
+        return representation
+
 
   
 class ParkingSlotGroupSerializerDummy(serializers.ModelSerializer):
     class Meta:
         model = ParkingSlotGroup
         fields = "__all__"
+
+    def to_representation(self, instance):
+       representation = super().to_representation(instance)
+       representation['parking_slots'] = ParkingSlotSerializer(ParkingSlot.objects.filter(parking_slot_group=instance.id),many=True).data
+
+       return representation
+
+  
+class ParkingSlotGroupSerializerDummyDummy(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlotGroup
+        fields = "__all__"
+
+    def to_representation(self, instance):
+       representation = super().to_representation(instance)
+       representation['parking_slots'] = ParkingSlotSerializer(ParkingSlot.objects.filter(parking_slot_group=instance.id),many=True).data
+
+       return representation
 
    
 class ParkingSlotGroupSerializer(serializers.ModelSerializer):
@@ -206,7 +281,7 @@ class ParkingSlotGroupSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['parking_floor'] = ParkingFloorSerializer(instance.parking_floor).data
-        representation['parking_slot'] = ParkingSlotSerializer(ParkingSlot.objects.filter(parking_slot_group=instance.id),many=True).data
+        representation['parking_slots'] = ParkingSlotSerializer(ParkingSlot.objects.filter(parking_slot_group=instance.id),many=True).data
 
         return representation
         
@@ -274,6 +349,18 @@ class BookingSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance) 
         representation['parking_slot'] = ParkingSlotSerializer(instance.parking_slot).data
         representation['vehicle'] = VehicleSerializer(instance.vehicle).data
+        return representation
+    
+
+class ParkingSlot_VehicleTypeSerializerDummy(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlot_VehicleType
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance) 
+        #representation['parking_slot'] = ParkingSlotGroupSerializerDummy(instance.parking_slot).data
+        representation['vehicle_type'] = VehicleTypeSerializer(instance.vehicle_type).data
         return representation
 
 class ParkingSlot_VehicleTypeSerializer(serializers.ModelSerializer):

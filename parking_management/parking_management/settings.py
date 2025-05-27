@@ -27,7 +27,7 @@ DEBUG = True
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-ALLOWED_HOSTS = ['192.168.0.165','192.168.0.178','localhost','192.168.0.101','127.0.0.1']
+ALLOWED_HOSTS = ['192.168.0.165','192.168.0.178','localhost','192.168.0.101','127.0.0.1','parking.astedaderpms.com']
 
 
 # Application definition
@@ -191,7 +191,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
-SITE_URL = "https://api.astedaderpms.com"
+SITE_URL = "https://parking.astedaderpms.com"
 
 
 
@@ -203,5 +203,10 @@ EMAIL_HOST_USER = 'ketsebaotertumo@gmail.com'
 EMAIL_SUBJECT_PREFIX = 'Astedader VPMS'
 EMAIL_HOST_PASSWORD = 'vhyaunypmaksffdr'
 DEFAULT_FROM_EMAIL = 'ASTEDADER VPMS <noreply@example.com>'
+
+
+import os
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 
 

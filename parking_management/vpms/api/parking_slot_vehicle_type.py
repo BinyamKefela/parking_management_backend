@@ -66,10 +66,16 @@ class ParkingSlot_VehicleTypeCreateView(generics.CreateAPIView):
 
 
     def create(self, request, *args, **kwargs):
-        parking_zone_id = request.data.get('parking_zone')
+        parking_slot_id = request.data.get('parking_slot')
+        vehicle_type_id = request.data.get('vehicle_type')
         
         try:
-            parking_slot = ParkingSlot.objects.get(pk=parking_zone_id)
+            parking_slot = ParkingSlot.objects.get(id=parking_slot_id)
+            try:
+                vehicle_type = VehicleType.objects.get(id=vehicle_type_id)
+            except:
+                return Response({"error":"there is no vehicle type with the given vehicle type id"},status=status.HTTP_404_NOT_FOUND)
+
         except:
-            return Response({"error":"there is no parking zone with the given parking zone id"},status=status.HTTP_404_NOT_FOUND)
+            return Response({"error":"there is no parking slot with the given parking slot id"},status=status.HTTP_404_NOT_FOUND)
         return super().create(request, *args, **kwargs)

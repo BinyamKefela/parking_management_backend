@@ -28,7 +28,7 @@ def validate_uploaded_image_extension(value):
 
 def get_upload_path(instance,filename):
     ext = filename.split('.')[-1]
-    new_file_name = SITE_URL+"/profiles/"+f'{instance.id}.{ext}'
+    new_file_name = "profiles/"+f'{instance.id}.{ext}'
     return new_file_name
 
 
@@ -277,7 +277,7 @@ class ParkingSlot(models.Model):
 # a model for setting the type of cars a parking slot can accomodate
 class ParkingSlot_VehicleType(models.Model):
     vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
-    parking_slot = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
+    parking_slot = models.ForeignKey(ParkingSlot,on_delete=models.SET_NULL,null=True)
  
 
 

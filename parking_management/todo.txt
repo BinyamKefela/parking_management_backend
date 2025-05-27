@@ -1,0 +1,9 @@
+Alias /media/ /home/astedade/parking_demo/media/
+
+<Directory /home/astedade/parking_demo/media>
+    Require all granted
+</Directory>
+
+
+
+put the above in .htaccess of the folder of the file so it works
