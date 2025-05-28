@@ -161,25 +161,26 @@ class ParkingZoneSerializerDummy(serializers.ModelSerializer):
     
 
 class ParkingZonePictureSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
+    image = serializers.ImageField(required=False)
+
     class Meta:
         model = ParkingZonePicture
         fields = "__all__"
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        if instance.image:
+            request = self.context.get('request')
+            if request:
+                representation['image'] = request.build_absolute_uri(instance.image.url)
+            else:
+                from django.conf import settings
+                representation['image'] = settings.SITE_URL + instance.image.url
+        else:
+            representation['image'] = None
         representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
         return representation
-    
-    def get_image(self,obj):
-        request = self.context.get('request')
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        elif obj.image:
-            # fallback if no request is available
-            from django.conf import settings
-            return settings.SITE_URL + obj.image.url
-        return None
+
 
 
 class ParkingZonePictureSerializerDummy(serializers.ModelSerializer):

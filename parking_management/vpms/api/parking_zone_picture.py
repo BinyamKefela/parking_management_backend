@@ -21,8 +21,8 @@ class ParkingZonePictureListView(generics.ListAPIView):
     queryset = ParkingZonePicture.objects.all()
     serializer_class = ParkingZonePictureSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
+    #filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
+    #filterset_fields = '__all__'
     search_fields = [field.name for field in ParkingZonePicture._meta.fields]
     ordering_fields = [field.name for field in ParkingZonePicture._meta.fields]
     ordering = ['id']
