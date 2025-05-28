@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Booking,ParkingZone,ParkingSlot,Vehicle,ParkingSlot_VehicleType,VehicleType
+from ..models import Booking,ParkingZone,ParkingSlot,Vehicle,ParkingSlot_VehicleType,DefaultPrice
 from ..serializers import BookingSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -131,6 +131,23 @@ from vpms.serializers import PricingCalculationSerializer
 
 
 #an API for returnng the price of a slot based on pricing rules provided
+from datetime import timedelta
+from django.utils.timezone import make_aware, is_naive
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+
+def get_default_rate(parking_zone):
+    try:
+        rule = DefaultPrice.objects.get(
+            parking_zone=parking_zone,
+        )
+        return rule.rate
+    except DefaultPrice.DoesNotExist:
+        return 0  
+
+
 class CalculatePriceView(APIView):
     def post(self, request):
         serializer = PricingCalculationSerializer(data=request.data)
@@ -140,24 +157,24 @@ class CalculatePriceView(APIView):
         data = serializer.validated_data
         zone_id = data['parking_zone']
         vehicle_type_id = data['vehicle_type']
-        start = data['start_time']
-        end = data['end_time']
+        start = data['start_datetime']
+        end = data['end_datetime']
 
         if start >= end:
             return Response({"error": "End time must be after start time."}, status=400)
 
-        # Convert to aware datetime if needed
-        start = make_aware(start) if start.tzinfo is None else start
-        end = make_aware(end) if end.tzinfo is None else end
+        if is_naive(start):
+            start = make_aware(start)
+        if is_naive(end):
+            end = make_aware(end)
 
         total_price = 0.0
         current = start
 
         while current < end:
-            day = current.strftime("%a").upper()[:3]  # e.g., "MON"
+            day = current.strftime("%a").upper()[:3]  # e.g., MON
             current_time = current.time()
 
-            # Find applicable rules for this time slice
             rules = PricingRule.objects.filter(
                 parking_zone_id=zone_id,
                 vehicle_type_id=vehicle_type_id,
@@ -167,21 +184,19 @@ class CalculatePriceView(APIView):
                 is_enabled=True
             )
 
-            if not rules.exists():
-                current += timedelta(minutes=1)
-                continue
+            if rules.exists():
+                rule = rules.first()
+                if rule.rate_type == 'minute':
+                    total_price += rule.rate
+                elif rule.rate_type == 'hourly':
+                    total_price += rule.rate / 60
+                elif rule.rate_type == 'daily':
+                    total_price += rule.rate / (24 * 60)
+            else:
+                # Fallback to default daily rate, distributed per minute
+                total_price += get_default_rate(parking_zone=zone_id)
 
-            rule = rules.first()  # You can adjust logic if multiple apply
-
-            if rule.rate_type == 'minute':
-                total_price += rule.rate
-                current += timedelta(minutes=1)
-            elif rule.rate_type == 'hourly':
-                total_price += rule.rate / 60
-                current += timedelta(minutes=1)
-            elif rule.rate_type == 'daily':
-                total_price += rule.rate / (24 * 60)
-                current += timedelta(minutes=1)
+            current += timedelta(minutes=1)
 
         return Response({
             "total_price": round(total_price, 2),

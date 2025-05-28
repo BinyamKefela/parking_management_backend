@@ -402,7 +402,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class PricingCalculationSerializer(serializers.Serializer):
-    parking_zone_id = serializers.IntegerField()
-    vehicle_type_id = serializers.IntegerField()
+    parking_zone = serializers.IntegerField()
+    vehicle_type = serializers.IntegerField()
     start_datetime = serializers.DateTimeField()
     end_datetime = serializers.DateTimeField()

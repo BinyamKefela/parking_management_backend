@@ -18,6 +18,7 @@ from .api.parking_slot_vehicle_type import *
 from .api.parking_slot_group import *
 from .api.booking import *
 from .api.staff import *
+from .api.pricing_rule import *
 
 
 
@@ -192,7 +193,7 @@ urlpatterns = [
   path('delete_booking/<int:id>',BookingDestroyView.as_view(),name='delete_booking'),
   path('cancel_booking',cancel_booking,name="cancel_booking"),
 
-  path('calculate-price/', CalculatePriceView.as_view(), name='calculate-price'),
+  path('calculate_price', CalculatePriceView.as_view(), name='calculate_price'),
   
 
   
@@ -204,7 +205,24 @@ urlpatterns = [
   path('update_staff/<int:id>',StaffUpdateView.as_view(),name='update_staff'),
   path('delete_staff/<int:id>',StaffDestroyView.as_view(),name='delete_staff'),
 
+
+
+#------------------------------------pricing rules------------------------------------------------------
+
+  path('get_pricing_rules',PricingRuleListView.as_view(),name='get_pricing_rules'),
+  path('get_pricing_rule/<int:id>',PricingRuleRetrieveView.as_view(),name='get_pricing_rule'),
+  path('post_pricing_rule',PricingRuleCreateView.as_view(),name='post_pricing_rule'),
+  path('update_pricing_rule/<int:id>',PricingRuleUpdateView.as_view(),name='update_pricing_rule'),
+  path('delete_pricing_rule/<int:id>',PricingRuleDestroyView.as_view(),name='delete_pricing_rule'),
   
 
+#------------------------------------pricing rules------------------------------------------------------
+
+  path('get_pricing_rules',PricingRuleListView.as_view(),name='get_pricing_rules'),
+  path('get_pricing_rule/<int:id>',PricingRuleRetrieveView.as_view(),name='get_pricing_rule'),
+  path('post_pricing_rule',PricingRuleCreateView.as_view(),name='post_pricing_rule'),
+  path('update_pricing_rule/<int:id>',PricingRuleUpdateView.as_view(),name='update_pricing_rule'),
+  path('delete_pricing_rule/<int:id>',PricingRuleDestroyView.as_view(),name='delete_pricing_rule'),
+  
 
 ]

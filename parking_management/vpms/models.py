@@ -293,19 +293,19 @@ class Vehicle(models.Model):
         unique_together = ('vehicle_type','user')
 
 
-class PricingRule(models.Model):
+class   PricingRule(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
     vehicle_type = models.ForeignKey(VehicleType,null=True,on_delete=models.SET_NULL)
     rule_name = models.CharField(max_length=100,null=True)
     rate_type = models.CharField(max_length=100,choices=(('minute','minute'),('hourly','hourly'),
                                                          ('daily','daily')))
     rate = models.FloatField(null=False)
-    start_time = models.TimeField(null=True)
-    end_time = models.TimeField(null=True)
+    start_time = models.TimeField(null=True,blank=True)
+    end_time = models.TimeField(null=True,blank=True)
     day_of_week = models.CharField(max_length=100,choices=(('MON','MON'),('TUE','TUE'),
                                                          ('WED','WED'),('THU','THU'),
                                                          ('FRI','FRI'),('SAT','SAT'),
-                                                         ('SUN','SUN')))
+                                                         ('SUN','SUN')),null=True)
     is_enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
@@ -313,6 +313,14 @@ class PricingRule(models.Model):
 
     class Meta:
         unique_together = ('parking_zone','vehicle_type','start_time','end_time','day_of_week')
+
+
+class DefaultPrice(models.Model):
+    parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
+    rate = models.FloatField(null=False)
+
+    class Meta:
+        unique_together = ('parking_zone',)
 
 
 

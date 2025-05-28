@@ -71,7 +71,7 @@ class PricingRuleCreateView(generics.CreateAPIView):
         try:
             parking_zone = ParkingZone.objects.get(pk=parking_zone_id)
         except:
-            return Response({"error":"there is no vehicle type with the given vehicle id"},status=status.HTTP_404_NOT_FOUND)
+            return Response({"error":"there is no parking zone with the given zone id"},status=status.HTTP_404_NOT_FOUND)
         try:
             vehicle_type = VehicleType.objects.get(pk=vehicle_type_id)
         except:
