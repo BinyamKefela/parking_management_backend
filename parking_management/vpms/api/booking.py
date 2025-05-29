@@ -73,6 +73,7 @@ class BookingCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         parking_slot_id = request.data.get("parking_slot")
         vehicle_id = request.data.get("vehicle")
+        vehicle_number = request.data.get("vehicle_number")
         start_time = request.data.get("start_time")
         end_time = request.data.get("end_time")
         try:
@@ -97,6 +98,8 @@ class BookingCreateView(generics.CreateAPIView):
         booking.start_time = start_time
         booking.end_time = end_time
         booking.status = BOOKING_ACTIVE
+        if vehicle_number:
+            booking.vehicle_number = vehicle_number
 
         parking_slot.is_available = False
         booking.save()

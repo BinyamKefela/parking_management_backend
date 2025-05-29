@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Owner
+from ..models import Owner,ParkingZone
 from ..serializers import OwnerSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -13,10 +13,11 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import Group
 from rest_framework.decorators import api_view,permission_classes
+from ..api.parking_zone import PARKING_ZONE_ACTIVE,PARKING_ZONE_INACTIVE
 
 OWNER_ACTIVE = "active"
 OWNER_TRIAL = "trial"
-OWNER_SUSPENDED = "suspended"
+OWNER_INACTIVE = "inactive"
 OWNER_CANCELLED = "cancelled"
 OWNER_PENDING = "pending"
 
@@ -85,12 +86,18 @@ class OwnerDestroyView(generics.DestroyAPIView):
         owner = self.get_object()
         if not owner:
             return Response({"error":"Owner not found!"}, status=status.HTTP_404_NOT_FOUND)
-        owner.status="cancelled"
+        owner.status=OWNER_INACTIVE
         try:
             user = owner.company_owner
             #user.groups.remove(Group.objects.filter(name="owner"))
             user.is_active = False
             user.save()
+
+            parking_zones = ParkingZone.objects.filter(zone_owner=user)
+            for pz in parking_zones:
+                pz.status = PARKING_ZONE_INACTIVE
+                pz.save()
+            
         except:
             return Response({"error":"There is no user with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
         owner.save()
@@ -139,6 +146,11 @@ def activate_owner(request):
             return Response({"error":"there is no active user with the given user id"},status=status.HTTP_404_NOT_FOUND)
         user.is_active=True
         user.save()
+
+        parking_zones = ParkingZone.objects.filter(zone_owner=user)
+        for pz in parking_zones:
+            pz.status = PARKING_ZONE_ACTIVE
+            pz.save()
     except:
         return Response({"error":"there is no user associated with the given owner id"},status=status.HTTP_404_NOT_FOUND)
     owner.status = OWNER_ACTIVE

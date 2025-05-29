@@ -406,3 +406,17 @@ class PricingCalculationSerializer(serializers.Serializer):
     vehicle_type = serializers.IntegerField()
     start_datetime = serializers.DateTimeField()
     end_datetime = serializers.DateTimeField()
+
+
+class DefaultPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefaultPrice
+        fields = "__all__"
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = "__all__"
+
+
+

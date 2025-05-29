@@ -129,10 +129,7 @@ class EmailResetCode(models.Model):
         return timezone.now() > self.created_at + timedelta(minutes=10)
        
 
-# a model for assigning staff member users to an owner    
-class Staff(models.Model):
-    staff_user = models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name='staff_user')
-    owner = models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name='staff_owner')
+
 
 class Plan(models.Model):
     name = models.CharField(max_length=100,null=False,blank=False,unique=True)
@@ -215,6 +212,7 @@ class ParkingZone(models.Model):
     latitude = models.CharField(max_length=100,null=True)
     longitude = models.CharField(max_length=100,null=True)
     total_floors = models.IntegerField(null=False)
+    status = models.CharField(max_length=100,default="active",null=False)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
 
@@ -240,6 +238,14 @@ class ParkingZonePicture(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,null=True,on_delete=models.SET_NULL)
     description = models.CharField(max_length=200,null=True)
     image = models.FileField(upload_to=get_parking_zone_image_upload_path,validators=[validate_parking_zone_picture],null=True,blank=True)
+
+
+
+# a model for assigning staff member users to an owner    
+class Staff(models.Model):
+    staff_user = models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name='staff_user')
+    owner = models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name='staff_owner')
+    parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
 
 
 
@@ -293,7 +299,7 @@ class Vehicle(models.Model):
         unique_together = ('vehicle_type','user')
 
 
-class   PricingRule(models.Model):
+class PricingRule(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
     vehicle_type = models.ForeignKey(VehicleType,null=True,on_delete=models.SET_NULL)
     rule_name = models.CharField(max_length=100,null=True)
@@ -327,6 +333,7 @@ class DefaultPrice(models.Model):
 class Booking(models.Model):
     parking_slot = models.ForeignKey(ParkingSlot,on_delete=models.SET_NULL,null=True)
     vehicle = models.ForeignKey(Vehicle,on_delete=models.SET_NULL,null=True)
+    vehicle_number = models.CharField(max_length=100,null=True)
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
     total_price = models.FloatField(null=False)

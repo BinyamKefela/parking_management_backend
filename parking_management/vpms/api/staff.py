@@ -118,6 +118,7 @@ def create_staff(request):
     last_name = request.data.get("last_name")
     password = request.data.get("password")
     phone_number = request.data.get("phone_number")
+    parking_zone = request.data.get("parking_zone")
 
     if not all([email, first_name, last_name, password]):
         return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
@@ -136,6 +137,7 @@ def create_staff(request):
     staff = Staff()
     staff.staff_user = staff_user
     staff.owner = owner
+    staff.parking_zone = parking_zone
     staff.save()
 
     staff_user.groups.clear()

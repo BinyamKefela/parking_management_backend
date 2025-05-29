@@ -19,6 +19,8 @@ from .api.parking_slot_group import *
 from .api.booking import *
 from .api.staff import *
 from .api.pricing_rule import *
+from .api.default_price import *
+from .api.payment import *
 
 
 
@@ -130,10 +132,12 @@ urlpatterns = [
   #---------------------------------Parking zone routes-------------------------------------------------------
 
   path('get_parking_zones',ParkingZoneListView.as_view(),name='get_parking_zones'),
+  path('get_all_parking_zones',AllParkingZoneListView.as_view(),name='get_parking_zones'),
   path('get_parking_zone/<int:id>',ParkingZoneRetrieveView.as_view(),name='get_parking_zone'),
   path('post_parking_zone',ParkingZoneCreateView.as_view(),name='post_parking_zone'),
   path('update_parking_zone/<int:id>',ParkingZoneUpdateView.as_view(),name='update_parking_zone'),
   path('delete_parking_zone/<int:id>',ParkingZoneDestroyView.as_view(),name='delete_parking_zone'),
+  path('activate_parking_zone',activate_parking_zone,name='activate_parking_zone'),
 
 
   #---------------------------------Parking zone picture routes-------------------------------------------------------
@@ -216,13 +220,22 @@ urlpatterns = [
   path('delete_pricing_rule/<int:id>',PricingRuleDestroyView.as_view(),name='delete_pricing_rule'),
   
 
-#------------------------------------pricing rules------------------------------------------------------
+#------------------------------------default price------------------------------------------------------
 
-  path('get_pricing_rules',PricingRuleListView.as_view(),name='get_pricing_rules'),
-  path('get_pricing_rule/<int:id>',PricingRuleRetrieveView.as_view(),name='get_pricing_rule'),
-  path('post_pricing_rule',PricingRuleCreateView.as_view(),name='post_pricing_rule'),
-  path('update_pricing_rule/<int:id>',PricingRuleUpdateView.as_view(),name='update_pricing_rule'),
-  path('delete_pricing_rule/<int:id>',PricingRuleDestroyView.as_view(),name='delete_pricing_rule'),
+  path('get_default_prices',DefaultPriceListView.as_view(),name='get_default_prices'),
+  path('get_default_price/<int:id>',DefaultPriceRetrieveView.as_view(),name='get_default_price'),
+  path('post_default_price',DefaultPriceCreateView.as_view(),name='post_default_price'),
+  path('update_default_price/<int:id>',DefaultPriceUpdateView.as_view(),name='update_default_price'),
+  path('delete_default_price/<int:id>',DefaultPriceDestroyView.as_view(),name='delete_default_price'),
+
+
+#------------------------------------payment------------------------------------------------------
+
+  path('get_payments',PaymentListView.as_view(),name='get_payments'),
+  path('get_payment/<int:id>',PaymentRetrieveView.as_view(),name='get_payment'),
+  path('post_payment',PaymentCreateView.as_view(),name='post_payment'),
+  path('update_payment/<int:id>',PaymentUpdateView.as_view(),name='update_payment'),
+  path('delete_payment/<int:id>',PaymentDestroyView.as_view(),name='delete_payment'),
   
 
 ]
