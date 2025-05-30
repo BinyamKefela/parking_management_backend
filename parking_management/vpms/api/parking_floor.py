@@ -26,6 +26,7 @@ class ParkingFloorListView(generics.ListAPIView):
     #search_fields = [field.name for field in ParkingFloor._meta.fields]
     filterset_fields = {
     #'name': ['exact', 'icontains'],
+    "zone__zone_owner__email":['exact'],
     'floor_number': ['exact', 'icontains'],
     'zone__name':['exact']
     }
