@@ -20,7 +20,7 @@ class DefaultPriceListView(generics.ListAPIView):
     #filter_backends = [SearchFilter, OrderingFilter]
     #search_fields = [field.name for field in DefaultPrice._meta.fields]
     filterset_fields = {
-    'parking_zone__name': ['exact',],
+    'parking_zone__zone_owner__email': ['exact',],
     }
     search_fields = ["parking_zone__name","rate"]
     ordering_fields = [field.name for field in DefaultPrice._meta.fields]

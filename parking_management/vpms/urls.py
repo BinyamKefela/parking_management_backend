@@ -198,6 +198,7 @@ urlpatterns = [
   path('cancel_booking',cancel_booking,name="cancel_booking"),
 
   path('calculate_price', CalculatePriceView.as_view(), name='calculate_price'),
+  path('make_payment',make_payment,name="make_payment"),
   
 
   

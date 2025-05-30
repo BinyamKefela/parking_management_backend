@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Booking,ParkingZone,ParkingSlot,Vehicle,ParkingSlot_VehicleType,DefaultPrice
+from ..models import Booking,ParkingZone,ParkingSlot,Vehicle,ParkingSlot_VehicleType,DefaultPrice,Payment
 from ..serializers import BookingSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -20,6 +20,7 @@ User = get_user_model()
 BOOKING_ACTIVE = "active"
 BOOKING_CANCELLED = "cancelled"
 BOOKING_COMPLETE = "completeed"
+ALL_VEHICLE_TYPES = "all"
 
 
 class BookingListView(generics.ListAPIView):
@@ -27,8 +28,17 @@ class BookingListView(generics.ListAPIView):
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = [field.name for field in Booking._meta.fields]
+    #filterset_fields = '__all__'
+    #search_fields = [field.name for field in Booking._meta.fields]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'parking_slot__slot_number':['exact'],
+    'vehicle__plate_number': ['exact','icontains'],
+    'vehicle_number':['exact','icontains'],
+    'status':['exact','icontains']
+    }
+    search_fields = ["parking_slot__slot_number","vehicle__plate_number","vehicle_number"]
+
     ordering_fields = [field.name for field in Booking._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination
@@ -76,6 +86,7 @@ class BookingCreateView(generics.CreateAPIView):
         vehicle_number = request.data.get("vehicle_number")
         start_time = request.data.get("start_time")
         end_time = request.data.get("end_time")
+        total_price = request.data.get('total_price')
         try:
             parking_slot = ParkingSlot.objects.get(id=parking_slot_id)
             if parking_slot.is_available == False:
@@ -84,32 +95,39 @@ class BookingCreateView(generics.CreateAPIView):
             return Response({"error":"There is no parking slot with the given parking slot"},status=400)
         
         try:
-            vehicle = Vehicle.objects.get(id=vehicle_id)
-            vehicle_type = vehicle.vehicle_type
+            if vehicle_id:
+                vehicle = Vehicle.objects.get(id=vehicle_id)
+                vehicle_type = vehicle.vehicle_type
+            else: vehicle_type = VehicleType.objects.get(name=ALL_VEHICLE_TYPES)
         except:
             return Response({"error":"There is no vehicle with the given vehicle id"},status=403)
         
         #checking the selected vehicle can be parked in the given parking slot
-        if vehicle_type and not (ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,VehicleType=vehicle_type).count() > 0):
+        if (vehicle_type or vehicle_id==None) and not (ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,vehicle_type=vehicle_type).count() > 0 or ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,vehicle_type__name=ALL_VEHICLE_TYPES)):
             return Response({"error":"The selected vehicle can't be parked in the selected parking slot"},status=403)
         booking =  Booking()
         booking.parking_slot = parking_slot
-        booking.vehicle = vehicle
+        if vehicle_id:
+            booking.vehicle = vehicle
         booking.start_time = start_time
-        booking.end_time = end_time
+        if end_time:
+            booking.end_time = end_time
         booking.status = BOOKING_ACTIVE
+        if total_price:
+            booking.total_price = total_price
         if vehicle_number:
             booking.vehicle_number = vehicle_number
-
-        parking_slot.is_available = False
+        if total_price:
+            parking_slot.is_available = False
         booking.save()
+        parking_slot.is_available=False
         parking_slot.save()
         return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
     
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_booking(request):
-    booking_id = request.data.get("booking_id")
+    booking_id = request.data.get("booking")
     try:
         booking = Booking.objects.get(id=booking_id)
         if not (booking.status == BOOKING_ACTIVE):
@@ -119,6 +137,34 @@ def cancel_booking(request):
         return Response({"message","Booking cancelled successfully"},status=status.HTTP_200_OK)
     except:
         return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def make_payment(request):
+    booking_id = request.data.get("booking")
+    end_time = request.data.get("end_time")
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        booking.total_price = calculate_price(parking_zone=booking.parking_slot.parking_slot_group.parking_floor.zone,start_time=booking.start_time,end_time=end_time)
+        booking.status=BOOKING_COMPLETE
+        try:
+            parking_slot = ParkingSlot.objects.get(id=booking.parking_slot)
+            parking_slot.is_available=True
+            payment = Payment()
+            payment.booking = booking
+            payment.user = request.user
+            payment.amount = booking.total_price
+            payment.status = "complete"
+            payment.created_at = datetime.datetime.now()
+        except:
+            return Response({"error":"the parking slot associated with this booking has not been found"},status=status.HTTP_404_NOT_FOUND)
+    except:
+        return Response({"error":"there is no booking with the given booking id"},status=status.HTTP_404_NOT_FOUND)
+    booking.save()
+    parking_slot.save()
+    payment.save()
+    return Response({"message":"payment completed successfully"},status=status.HTTP_200_OK)
     
 
 
@@ -206,3 +252,47 @@ class CalculatePriceView(APIView):
             "start_time": start,
             "end_time": end
         }, status=200)
+    
+
+
+def calculate_price(parking_zone,start_time,end_time):
+    #serializer = PricingCalculationSerializer(data=request.data)
+    #if not serializer.is_valid():
+    #    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #data = serializer.validated_data
+    zone_id = parking_zone
+    start = start_time
+    end = end_time
+    if start >= end:
+        return Response({"error": "End time must be after start time."}, status=400)
+    if is_naive(start):
+        start = make_aware(start)
+    if is_naive(end):
+        end = make_aware(end)
+    total_price = 0.0
+    current = start
+    while current < end:
+        day = current.strftime("%a").upper()[:3]  # e.g., MON
+        current_time = current.time()
+        rules = PricingRule.objects.filter(
+            parking_zone_id=zone_id,
+            day_of_week=day,
+            start_time__lte=current_time,
+            end_time__gte=current_time,
+            is_enabled=True
+        )
+        if rules.exists():
+            rule = rules.first()
+            if rule.rate_type == 'minute':
+                total_price += rule.rate
+            elif rule.rate_type == 'hourly':
+                total_price += rule.rate / 60
+            elif rule.rate_type == 'daily':
+                total_price += rule.rate / (24 * 60)
+        else:
+            # Fallback to default daily rate, distributed per minute
+            total_price += get_default_rate(parking_zone=zone_id)
+        current += timedelta(minutes=1)
+    
+    return  round(total_price, 2),
+            

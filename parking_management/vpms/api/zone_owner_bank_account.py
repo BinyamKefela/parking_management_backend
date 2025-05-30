@@ -22,8 +22,13 @@ class ZoneOwnerBankAccountListView(generics.ListAPIView):
     serializer_class = ZoneOwnerBankAccountSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = [field.name for field in ZoneOwnerBankAccount._meta.fields]
+    #filterset_fields = '__all__'
+    #search_fields = [field.name for field in ZoneOwnerBankAccount._meta.fields]
+    filterset_fields = {
+    'owner__company_owner__email': ['exact'],
+    
+    }
+    search_fields = ["owner__company_owner__email","bank_account"]
     ordering_fields = [field.name for field in ZoneOwnerBankAccount._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination

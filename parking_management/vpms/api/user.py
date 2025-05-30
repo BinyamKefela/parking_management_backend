@@ -17,7 +17,7 @@ from django.db.models import F, Value
 from django.db.models.functions import Concat
 import json
 from django.conf import settings
-from ..models import Staff
+from ..models import Staff,EmailResetCode
 
 from rest_framework.permissions import AllowAny
 from django.core.mail import send_mail
@@ -216,7 +216,7 @@ def send_password_reset_email_phone(request):
     except User.DoesNotExist:
         return Response({"error":"there is no user with the provided email"},status=status.HTTP_404_NOT_FOUND)
     code = f"{random.randint(1000, 9999)}"
-    EmailVerification.objects.create(email=email,code=code)
+    EmailResetCode.objects.create(user=user,code=code)
 
     refresh = RefreshToken.for_user(user)
     token = str(refresh.access_token)
@@ -243,10 +243,13 @@ class VerifyResetCodeView(APIView):
     def post(self, request):
         email = request.data.get("email")
         code = request.data.get("code")
-
         try:
-            record = EmailVerification.objects.filter(email=email, code=code, is_used=False).latest('created_at')
-        except EmailVerification.DoesNotExist:
+           user = User.objects.get(email=email)
+        except User.DoesNotExist:
+           return Response({"error":"there is no user with the provided email"},status=status.HTTP_404_NOT_FOUND)
+        try:
+            record = EmailResetCode.objects.filter(user=user, code=code, is_used=False).latest('created_at')
+        except EmailResetCode.DoesNotExist:
             return Response({"error": "Invalid code."}, status=status.HTTP_400_BAD_REQUEST)
 
         if record.is_expired():

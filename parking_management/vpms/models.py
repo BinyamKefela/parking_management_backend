@@ -120,7 +120,7 @@ class EmailVerification(models.Model):
         return f"Verification for {self.user.email}"
 
 class EmailResetCode(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=6)
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -336,7 +336,7 @@ class Booking(models.Model):
     vehicle_number = models.CharField(max_length=100,null=True)
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
-    total_price = models.FloatField(null=False)
+    total_price = models.FloatField(null=True)
     status = models.CharField(max_length=100,choices=(('active','active'),('cancelled','cancelled'),('completed','completed')))
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)

@@ -22,8 +22,14 @@ class PricingRuleListView(generics.ListAPIView):
     serializer_class = PricingRuleSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
-    search_fields = [field.name for field in PricingRule._meta.fields]
+    #filterset_fields = '__all__'
+    #search_fields = [field.name for field in PricingRule._meta.fields]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'parking_zone__zone_owner__email':['exact'],
+    
+    }
+    search_fields = ["parking_zone__zone_owner__email","rule_name","rate","vehicle_type__name"]
     ordering_fields = [field.name for field in PricingRule._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination
