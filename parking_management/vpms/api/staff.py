@@ -148,7 +148,10 @@ def create_staff(request):
     staff = Staff()
     staff.staff_user = staff_user
     staff.owner = owner
-    staff.parking_zone = parking_zone
+    try:
+        staff.parking_zone = ParkingZone.objects.get(id=parking_zone)
+    except:
+        return Response({"message":"there is no parking zone with the given parking zone id"},status=status.HTTP_400_BAD_REQUEST)
     staff.save()
 
     staff_user.groups.clear()
