@@ -297,6 +297,7 @@ class StaffSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['staff_user'] = UserSerializer(instance.staff_user).data
         representation['owner'] = UserSerializer(instance.owner).data
+        representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
         return representation
 
 class VehicleTypeSerializer(serializers.ModelSerializer):

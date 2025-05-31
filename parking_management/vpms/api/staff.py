@@ -25,20 +25,29 @@ class StaffListView(generics.ListAPIView):
     serializer_class = StaffSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
+    #filterset_fields = '__all__'
     search_fields = [field.name for field in Staff._meta.fields]
+    filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
+    filterset_fields = {
+    'owner__email': ['exact'],
+    }
     ordering_fields = [field.name for field in Staff._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination
 
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
         owner = self.request.user
         try:
             user = owner
-            if not user.groups.filter(name='owner').exists():
-                return Response({"error":"there is no owner with the given id"},status=status.HTTP_404_NOT_FOUND)
+            if not user.groups.filter(name='owner').exists() and not user.is_superuser:
+                return Response({"error":"the given user is not a user and doesn;t have a staff"},status=status.HTTP_404_NOT_FOUND)
         except:
             return Response({"error":"there is no user wth the given id"},status=status.HTTP_404_NOT_FOUND)
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        owner = self.request.user
+        
         queryset = super().get_queryset()
         queryset.filter(owner=owner)
         return queryset
@@ -107,6 +116,8 @@ class StaffDestroyView(generics.DestroyAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_staff(request):
+    if not request.user.has_perm('vpms.add_staff'):
+        return Response({"error":"Unauthorized access"},status=status.HTTP_401_UNAUTHORIZED)
     
     owner = request.user
     #checking whether the user is an owner

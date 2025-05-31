@@ -49,6 +49,7 @@ class ZoneOwnerBankAccountUpdateView(generics.UpdateAPIView):
     serializer_class = ZoneOwnerBankAccountSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     lookup_field = 'id'
+    
 
 
 class ZoneOwnerBankAccountDestroyView(generics.DestroyAPIView):
@@ -77,13 +78,23 @@ class ZoneOwnerBankAccountCreateView(generics.CreateAPIView):
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        owner_id = request.data.get('owner')
+        user_id = request.data.get('user')
         try:
-            owner = Owner.objects.get(id=owner_id)
+            user = User.objects.get(id=user_id)
         except:
-            return Response({"error":"there is no owner with the given owner id"},status=status.HTTP_404_NOT_FOUND)
+            return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
+        try:
+            owner = Owner.objects.get(company_owner=user)
+        except:
+            return Response({"error":"there is no owner associated with the given user id"},status=status.HTTP_404_NOT_FOUND)
+        zoba = ZoneOwnerBankAccount()
+        zoba.account_type = request.data.get('account_type')
+        zoba.created_at = datetime.datetime.now()
+        zoba.bank_account = request.data.get('bank_account')
+        zoba.owner = owner
+        zoba.save()
         
-        return super().create(request, *args, **kwargs)
+        return Response({"message":"bank account created successfully"})
 
 
 
