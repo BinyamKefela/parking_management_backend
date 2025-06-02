@@ -22,7 +22,11 @@ class VehicleListView(generics.ListAPIView):
     serializer_class = VehicleSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
-    filterset_fields = '__all__'
+    #filterset_fields = '__all__'
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    "user__id":['exact'],
+    }
     search_fields = [field.name for field in Vehicle._meta.fields]
     ordering_fields = [field.name for field in Vehicle._meta.fields]
     ordering = ['id']

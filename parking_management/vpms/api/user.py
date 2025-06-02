@@ -329,6 +329,7 @@ def update_user(request,id):
     #is_active = request.data.get("is_get")
     is_superuser = request.data.get("is_superuser")
     profile_picture = request.FILES.get("profile_picture")
+    password = request.data.get("password")
 
     if user_permissions:
         permissions = Permission.objects.filter(codename__in=user_permissions)
@@ -352,6 +353,8 @@ def update_user(request,id):
         user.is_superuser = is_superuser
     if profile_picture:
         user.profile_picture = profile_picture
+    if password:
+        user.set_password(password)
 
     user.save()
 

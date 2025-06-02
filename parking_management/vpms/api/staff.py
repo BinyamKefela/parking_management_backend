@@ -30,6 +30,7 @@ class StaffListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
     filterset_fields = {
     'owner__email': ['exact'],
+    'staff_user__email':['exact']
     }
     ordering_fields = [field.name for field in Staff._meta.fields]
     ordering = ['id']
@@ -39,8 +40,7 @@ class StaffListView(generics.ListAPIView):
         owner = self.request.user
         try:
             user = owner
-            if not user.groups.filter(name='owner').exists() and not user.is_superuser:
-                return Response({"error":"the given user is not a user and doesn;t have a staff"},status=status.HTTP_404_NOT_FOUND)
+            
         except:
             return Response({"error":"there is no user wth the given id"},status=status.HTTP_404_NOT_FOUND)
         return super().list(request, *args, **kwargs)
@@ -72,22 +72,27 @@ class StaffUpdateView(generics.UpdateAPIView):
     def update(self, request, *args, **kwargs):
         owner = request.user
         try:
-            staff = Staff.objects.get(pk=request.data.get('staff'))
+            staff = Staff.objects.get(id=self.kwargs['id'])
+            if staff == None:
+                return Response({"Error":"staff not found"},status=status.HTTP_404_NOT_FOUND)
         except:
-            return Response({"error":"there is no staff witht the given staff id"},status=status.HTTP_404_NOT_FOUND)
+            return Response({"error":"there is no staff with the given staff id"},status=status.HTTP_404_NOT_FOUND)
         
-        if not staff.owner == owner:
-            return Response({"error":"the given owner is not the owner of the given staff user"},status=status.HTTP_400_BAD_REQUEST)
-
+        user = staff.staff_user
         first_name = request.data.get('first_name',None)
         middle_name = request.data.get('middle_name',None)
         last_name = request.data.get('last_name',None)
         phone_nummber = request.data.get('phone_number',None)
-        if first_name: staff.staff_user.first_name = first_name
-        if middle_name: staff.staff_user.middle_name = middle_name
-        if last_name: staff.staff_user.last_name = last_name
-        if phone_nummber: staff.staff_user.phone_number = phone_nummber
-
+        parking_zone = request.data.get('parking_zone',None)
+        if first_name: user.first_name = first_name
+        if middle_name: user.middle_name = middle_name
+        if last_name: user.last_name = last_name
+        if phone_nummber: user.phone_number = phone_nummber
+        try:
+            if parking_zone: staff.parking_zone = ParkingZone.objects.get(id=parking_zone)
+        except:
+            return Response({"error":"there is no stparking zone with the given zone id"},status=status.HTTP_404_NOT_FOUND)
+        user.save()
         staff.save()
         return Response(StaffSerializer(staff).data,status=status.HTTP_200_OK)
 

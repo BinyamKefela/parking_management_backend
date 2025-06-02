@@ -144,7 +144,6 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
         representation['zone_owner'] = UserSerializer(instance.zone_owner).data
         representation["parking_floors"] = ParkingFloorSerializer(ParkingFloor.objects.filter(zone=instance.id),many=True).data
         representation['parking_zone_pictures'] = ParkingZonePictureSerializerDummy(ParkingZonePicture.objects.filter(parking_zone=instance.id),many=True).data
-        representation['default_price'] = DefaultPriceSerializerDummy(DefaultPrice.objects.filter(parking_zone=instance.id),many=True).data 
         return representation
     
 class ParkingZoneSerializerDummy(serializers.ModelSerializer):
@@ -297,7 +296,6 @@ class StaffSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['staff_user'] = UserSerializer(instance.staff_user).data
         representation['owner'] = UserSerializer(instance.owner).data
-        representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
         return representation
 
 class VehicleTypeSerializer(serializers.ModelSerializer):
@@ -409,28 +407,17 @@ class PricingCalculationSerializer(serializers.Serializer):
     start_datetime = serializers.DateTimeField()
     end_datetime = serializers.DateTimeField()
 
-
 class DefaultPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = DefaultPrice
         fields = "__all__"
-
-    def to_representation(self, instance):
-        representation =  super().to_representation(instance)
-        representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
-        return representation
-    
-
-class DefaultPriceSerializerDummy(serializers.ModelSerializer):
-    class Meta:
-        model = DefaultPrice
-        fields = "__all__"
-
-    
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = "__all__"
 
-
+class FavoriteZonesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteZones
+        fields = "__all__"
