@@ -19,7 +19,7 @@ User = get_user_model()
 
 BOOKING_ACTIVE = "active"
 BOOKING_CANCELLED = "cancelled"
-BOOKING_COMPLETE = "completeed"
+BOOKING_COMPLETE = "completed"
 ALL_VEHICLE_TYPES = "all"
 
 
@@ -103,8 +103,11 @@ class BookingCreateView(generics.CreateAPIView):
             return Response({"error":"There is no vehicle with the given vehicle id"},status=403)
         
         #checking the selected vehicle can be parked in the given parking slot
-        if (vehicle_type or vehicle_id==None) and not (ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,vehicle_type=vehicle_type).count() > 0 or ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,vehicle_type__name=ALL_VEHICLE_TYPES)):
-            return Response({"error":"The selected vehicle can't be parked in the selected parking slot"},status=403)
+        if vehicle_type and ((not ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,vehicle_type=vehicle_type).count() > 0)):
+            if not vehicle_number:
+              if not vehicle.vehicle_type.name == ALL_VEHICLE_TYPES:
+        #if (vehicle_type or vehicle_id==None) and (not (ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,vehicle_type=vehicle_type).count() > 0 or ParkingSlot_VehicleType.objects.filter(parking_slot=parking_slot,vehicle_type__name=ALL_VEHICLE_TYPES))):
+                   return Response({"error":"The selected vehicle can't be parked in the selected parking slot"},status=403)
         booking =  Booking()
         booking.parking_slot = parking_slot
         if vehicle_id:
@@ -146,10 +149,11 @@ def make_payment(request):
     end_time = request.data.get("end_time")
     try:
         booking = Booking.objects.get(id=booking_id)
+        booking.end_time = end_time
         booking.total_price = calculate_price(parking_zone=booking.parking_slot.parking_slot_group.parking_floor.zone,start_time=booking.start_time,end_time=end_time)
         booking.status=BOOKING_COMPLETE
         try:
-            parking_slot = ParkingSlot.objects.get(id=booking.parking_slot)
+            parking_slot = ParkingSlot.objects.get(id=booking.parking_slot.id)
             parking_slot.is_available=True
             payment = Payment()
             payment.booking = booking
@@ -157,10 +161,10 @@ def make_payment(request):
             payment.amount = booking.total_price
             payment.status = "complete"
             payment.created_at = datetime.datetime.now()
-        except:
-            return Response({"error":"the parking slot associated with this booking has not been found"},status=status.HTTP_404_NOT_FOUND)
-    except:
-        return Response({"error":"there is no booking with the given booking id"},status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error":str(e)},status=status.HTTP_404_NOT_FOUND)
+    except Exception as ex:
+        return Response({"error":"Ther is no booking with the given booking id"},status=status.HTTP_404_NOT_FOUND)
     booking.save()
     parking_slot.save()
     payment.save()
@@ -190,7 +194,7 @@ from rest_framework import status
 def get_default_rate(parking_zone):
     try:
         rule = DefaultPrice.objects.get(
-            parking_zone=parking_zone,
+            parking_zone=parking_zone
         )
         return rule.rate
     except DefaultPrice.DoesNotExist:
@@ -263,6 +267,21 @@ def calculate_price(parking_zone,start_time,end_time):
     zone_id = parking_zone
     start = start_time
     end = end_time
+    if isinstance(start_time, str):
+        start = datetime.datetime.fromisoformat(start_time)
+    else:
+        start = start_time
+
+    if isinstance(end_time, str):
+        end = datetime.datetime.fromisoformat(end_time)
+    else:
+        end = end_time
+
+    if is_naive(start):
+        start = make_aware(start)
+    if is_naive(end):
+        end = make_aware(end)
+
     if start >= end:
         return Response({"error": "End time must be after start time."}, status=400)
     if is_naive(start):
@@ -294,5 +313,5 @@ def calculate_price(parking_zone,start_time,end_time):
             total_price += get_default_rate(parking_zone=zone_id)
         current += timedelta(minutes=1)
     
-    return  round(total_price, 2),
+    return  round(total_price, 2)
             
