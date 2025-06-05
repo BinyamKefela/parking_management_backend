@@ -21,6 +21,7 @@ from .api.staff import *
 from .api.pricing_rule import *
 from .api.default_price import *
 from .api.payment import *
+from .api.favorite_zones import *
 
 
 
@@ -196,9 +197,11 @@ urlpatterns = [
   path('update_booking/<int:id>',BookingUpdateView.as_view(),name='update_booking'),
   path('delete_booking/<int:id>',BookingDestroyView.as_view(),name='delete_booking'),
   path('cancel_booking',cancel_booking,name="cancel_booking"),
+  path('cancel_booking_phone/<str:booking>',cancel_booking_phone,name="cancel_booking_phone"),
 
   path('calculate_price', CalculatePriceView.as_view(), name='calculate_price'),
   path('make_payment',make_payment,name="make_payment"),
+  path('make_payment_phone/<str:booking>/<str:end_time>',make_payment_phone,name="make_payment_phone"),
   
 
   
@@ -237,6 +240,17 @@ urlpatterns = [
   path('post_payment',PaymentCreateView.as_view(),name='post_payment'),
   path('update_payment/<int:id>',PaymentUpdateView.as_view(),name='update_payment'),
   path('delete_payment/<int:id>',PaymentDestroyView.as_view(),name='delete_payment'),
+
+
+
+
+#------------------------------------favorite zones------------------------------------------------------
+
+  path('get_favorite_zones',FavoriteZonesListView.as_view(),name='get_favorite_zones'),
+  path('get_favorite_zone/<int:id>',FavoriteZonesRetrieveView.as_view(),name='get_favorite_zone'),
+  path('post_favorite_zone',FavoriteZonesCreateView.as_view(),name='post_favorite_zone'),
+  path('update_favorite_zone/<int:id>',FavoriteZonesUpdateView.as_view(),name='update_favorite_zone'),
+  path('delete_favorite_zone/<int:id>',FavoriteZonesDestroyView.as_view(),name='delete_favorite_zone'),
   
 
 ]

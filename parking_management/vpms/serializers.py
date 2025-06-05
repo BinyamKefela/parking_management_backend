@@ -144,6 +144,7 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
         representation['zone_owner'] = UserSerializer(instance.zone_owner).data
         representation["parking_floors"] = ParkingFloorSerializer(ParkingFloor.objects.filter(zone=instance.id),many=True).data
         representation['parking_zone_pictures'] = ParkingZonePictureSerializerDummy(ParkingZonePicture.objects.filter(parking_zone=instance.id),many=True).data
+        representation['default_price'] = DefaultPriceSerializer(DefaultPrice.objects.filter(parking_zone=instance.id),many=True).data
         return representation
     
 class ParkingZoneSerializerDummy(serializers.ModelSerializer):
@@ -394,10 +395,21 @@ class BookingSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance) 
-        representation['parking_slot'] = ParkingSlotSerializer(instance.parking_slot).data
+        representation['parking_slot'] = ParkingSLotSerializerForBooking(instance.parking_slot).data
         representation['vehicle'] = VehicleSerializer(instance.vehicle).data
         return representation
     
+
+class ParkingSLotSerializerForBooking(serializers.ModelSerializer):
+    class Meta:
+        model = ParkingSlot
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        
+        representation['parking_slot_group'] = ParkingSlotGroupSerializer(instance.parking_slot_group).data
+        return representation
 
 
 
@@ -413,10 +425,19 @@ class DefaultPriceSerializer(serializers.ModelSerializer):
         model = DefaultPrice
         fields = "__all__"
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['parking_zone'] = ParkingZoneSerializerDummy(instance.parking_zone).data
+        return representation
+
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = "__all__"
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['booking'] = BookingSerializer(instance.booking).data
+        return representation
 
 class FavoriteZonesSerializer(serializers.ModelSerializer):
     class Meta:

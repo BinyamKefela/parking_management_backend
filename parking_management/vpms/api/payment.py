@@ -31,8 +31,13 @@ class PaymentListView(generics.ListAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = [field.name for field in Payment._meta.fields]
+    #filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["booking__vehicle__plate_number","transaction_id","booking__vehicle_number"]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'booking__parking_slot__parking_slot_group__parking_floor__zone__zone_owner__email':['exact']
+    }
+    #search_fields = ["parking_slot__slot_number","vehicle__plate_number","vehicle_number"]
     ordering_fields = [field.name for field in Payment._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination

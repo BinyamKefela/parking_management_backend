@@ -35,7 +35,8 @@ class BookingListView(generics.ListAPIView):
     'parking_slot__slot_number':['exact'],
     'vehicle__plate_number': ['exact','icontains'],
     'vehicle_number':['exact','icontains'],
-    'status':['exact','icontains']
+    'status':['exact','icontains'],
+    'parking_slot__parking_slot_group__parking_floor__zone__zone_owner__email':['exact',]
     }
     search_fields = ["parking_slot__slot_number","vehicle__plate_number","vehicle_number"]
 
@@ -135,7 +136,28 @@ def cancel_booking(request):
         booking = Booking.objects.get(id=booking_id)
         if not (booking.status == BOOKING_ACTIVE):
             return Response({"there is no active booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
+        parking_slot = booking.parking_slot
+        parking_slot.is_available = True
         booking.status = BOOKING_CANCELLED
+        parking_slot.save()
+        booking.save()
+        return Response({"message","Booking cancelled successfully"},status=status.HTTP_200_OK)
+    except:
+        return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
+    
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_booking_phone(request,booking):
+    booking_id = booking
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        if not (booking.status == BOOKING_ACTIVE):
+            return Response({"there is no active booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
+        parking_slot = booking.parking_slot
+        parking_slot.is_available = True
+        booking.status = BOOKING_CANCELLED
+        parking_slot.save()
         booking.save()
         return Response({"message","Booking cancelled successfully"},status=status.HTTP_200_OK)
     except:
@@ -172,6 +194,35 @@ def make_payment(request):
     
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def make_payment_phone(request,booking,end_time):
+    booking_id = booking
+    end_time = end_time
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        booking.end_time = end_time
+        booking.total_price = calculate_price(parking_zone=booking.parking_slot.parking_slot_group.parking_floor.zone,start_time=booking.start_time,end_time=end_time)
+        booking.status=BOOKING_COMPLETE
+        try:
+            parking_slot = ParkingSlot.objects.get(id=booking.parking_slot.id)
+            parking_slot.is_available=True
+            payment = Payment()
+            payment.booking = booking
+            payment.user = request.user
+            payment.amount = booking.total_price
+            payment.status = "complete"
+            payment.created_at = datetime.datetime.now()
+        except Exception as e:
+            return Response({"error":str(e)},status=status.HTTP_404_NOT_FOUND)
+    except Exception as ex:
+        return Response({"error":"Ther is no booking with the given booking id"},status=status.HTTP_404_NOT_FOUND)
+    booking.save()
+    parking_slot.save()
+    payment.save()
+    return Response({"message":"payment completed successfully"},status=status.HTTP_200_OK)
+
+
 
 # views.py
 from rest_framework.views import APIView
@@ -200,6 +251,14 @@ def get_default_rate(parking_zone):
     except DefaultPrice.DoesNotExist:
         return 0  
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils.timezone import is_naive, make_aware
+from datetime import timedelta
+
+
+
 
 class CalculatePriceView(APIView):
     def post(self, request):
@@ -216,6 +275,7 @@ class CalculatePriceView(APIView):
         if start >= end:
             return Response({"error": "End time must be after start time."}, status=400)
 
+        # Ensure timezone-aware datetimes
         if is_naive(start):
             start = make_aware(start)
         if is_naive(end):
@@ -224,30 +284,41 @@ class CalculatePriceView(APIView):
         total_price = 0.0
         current = start
 
+        # Load all relevant pricing rules once
+        rules = PricingRule.objects.filter(
+            parking_zone_id=zone_id,
+            vehicle_type_id=vehicle_type_id,
+            is_enabled=True
+        ).order_by('start_time')
+
+        # Group rules by day for fast lookup
+        rules_by_day = {day: [] for day in ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']}
+        for rule in rules:
+            rules_by_day[rule.day_of_week].append(rule)
+
+        # Cache default rate once per request
+        default_rate_per_minute = get_default_rate(parking_zone=zone_id)
+
+        # Minute-by-minute billing loop, now using in-memory rule lookup
         while current < end:
             day = current.strftime("%a").upper()[:3]  # e.g., MON
             current_time = current.time()
 
-            rules = PricingRule.objects.filter(
-                parking_zone_id=zone_id,
-                vehicle_type_id=vehicle_type_id,
-                day_of_week=day,
-                start_time__lte=current_time,
-                end_time__gte=current_time,
-                is_enabled=True
+            matched_rule = next(
+                (r for r in rules_by_day.get(day, [])
+                 if r.start_time <= current_time <= r.end_time),
+                None
             )
 
-            if rules.exists():
-                rule = rules.first()
-                if rule.rate_type == 'minute':
-                    total_price += rule.rate
-                elif rule.rate_type == 'hourly':
-                    total_price += rule.rate / 60
-                elif rule.rate_type == 'daily':
-                    total_price += rule.rate / (24 * 60)
+            if matched_rule:
+                if matched_rule.rate_type == 'minute':
+                    total_price += matched_rule.rate
+                elif matched_rule.rate_type == 'hourly':
+                    total_price += matched_rule.rate / 60
+                elif matched_rule.rate_type == 'daily':
+                    total_price += matched_rule.rate / (24 * 60)
             else:
-                # Fallback to default daily rate, distributed per minute
-                total_price += get_default_rate(parking_zone=zone_id)
+                total_price += default_rate_per_minute
 
             current += timedelta(minutes=1)
 
@@ -256,6 +327,7 @@ class CalculatePriceView(APIView):
             "start_time": start,
             "end_time": end
         }, status=200)
+
     
 
 
