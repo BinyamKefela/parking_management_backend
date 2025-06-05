@@ -3,6 +3,7 @@ from django.contrib.auth.models import User,Group,Permission,ContentType
 from django.contrib.auth import get_user_model,authenticate
 from rest_framework import serializers
 from .models import *
+from auditlog.models import LogEntry
 
 User = get_user_model()
 
@@ -443,3 +444,26 @@ class FavoriteZonesSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteZones
         fields = "__all__"
+
+
+class LogEntrySerializer(serializers.ModelSerializer):
+    action_display = serializers.SerializerMethodField()
+    changes_readable = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LogEntry
+        fields = [
+            'id', 'object_repr', 'action_display', 'changes_readable',
+            'actor', 'remote_addr', 'timestamp'  # ← Include remote_addr here
+        ]
+
+    def get_action_display(self, obj):
+        return obj.get_action_display()
+
+    def get_changes_readable(self, obj):
+        try:
+            changes = obj.changes_dict
+            return {field: f"{change[0]} → {change[1]}" for field, change in changes.items()}
+        except Exception:
+            return {}
+        

@@ -22,6 +22,7 @@ from .api.pricing_rule import *
 from .api.default_price import *
 from .api.payment import *
 from .api.favorite_zones import *
+from .api.log import *
 
 
 
@@ -252,5 +253,11 @@ urlpatterns = [
   path('update_favorite_zone/<int:id>',FavoriteZonesUpdateView.as_view(),name='update_favorite_zone'),
   path('delete_favorite_zone/<int:id>',FavoriteZonesDestroyView.as_view(),name='delete_favorite_zone'),
   
+
+#-----------------------------log entry--------------------------------------------------------------------
+
+  path('get_logs', LogEntryListView.as_view(), name='auditlog-list'),
+
+
 
 ]

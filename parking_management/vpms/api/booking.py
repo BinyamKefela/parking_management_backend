@@ -146,8 +146,8 @@ def cancel_booking(request):
         return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
     
     
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+@permission_classes([])
 def cancel_booking_phone(request,booking):
     booking_id = booking
     try:
@@ -195,7 +195,7 @@ def make_payment(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([])
 def make_payment_phone(request,booking,end_time):
     booking_id = booking
     end_time = end_time

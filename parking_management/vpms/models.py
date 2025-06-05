@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 from datetime import timedelta
 
 import uuid
+from auditlog.registry import auditlog
 
 SITE_URL = settings.SITE_URL
 
@@ -110,6 +111,8 @@ class User(AbstractBaseUser,PermissionsMixin):
         return super().save(*args, **kwargs)
 
 
+auditlog.register(User)
+
 
 class EmailVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -165,6 +168,8 @@ class Owner(models.Model):
     class Meta:
         unique_together = ('company_owner','company_name')
 
+auditlog.register(Owner)
+
 class Subscription(models.Model):
     owner = models.ForeignKey(Owner,on_delete=models.SET_NULL,null=True)
     plan = models.ForeignKey(Plan,on_delete=models.SET_NULL,null=True)
@@ -178,6 +183,8 @@ class Subscription(models.Model):
     class Meta:
         unique_together = ('owner',)
 
+auditlog.register(Subscription)
+
 class SubscriptionPayment(models.Model):
     subscription = models.ForeignKey(Subscription,on_delete=models.SET_NULL,null=True)
     payment_method = models.CharField(max_length=100,null=False)
@@ -190,6 +197,8 @@ class SubscriptionPayment(models.Model):
 
     class Meta:
         unique_together = ["transaction_id"]
+
+auditlog.register(SubscriptionPayment)
 
 
 
@@ -234,6 +243,8 @@ def get_parking_zone_image_upload_path(instance,filename):
     return new_file_name
 
 
+auditlog.register(ParkingZone)
+
 class ParkingZonePicture(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,null=True,on_delete=models.SET_NULL)
     description = models.CharField(max_length=200,null=True)
@@ -247,6 +258,7 @@ class Staff(models.Model):
     owner = models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name='staff_owner')
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
 
+auditlog.register(Staff)
 
 
 class ParkingFloor(models.Model):
@@ -260,6 +272,8 @@ class ParkingFloor(models.Model):
 
     def __str__(self):
         return "zone - "+str(self.zone.name)+" - floor - "+str(self.floor_number)
+    
+auditlog.register(ParkingFloor)
 
 class VehicleType(models.Model):
     name = models.CharField(max_length=100,unique=True,null=False)
@@ -267,6 +281,8 @@ class VehicleType(models.Model):
 class ParkingSlotGroup(models.Model):
     parking_floor = models.ForeignKey(ParkingFloor,on_delete=models.SET_NULL,null=True)
     name = models.CharField(max_length=100,null=False,unique=True)
+
+auditlog.register(ParkingSlotGroup)
 
 
 class ParkingSlot(models.Model):
@@ -280,10 +296,14 @@ class ParkingSlot(models.Model):
     class Meta:
         unique_together = ('parking_slot_group','slot_number')
 
+auditlog.register(ParkingSlot)
+
 # a model for setting the type of cars a parking slot can accomodate
 class ParkingSlot_VehicleType(models.Model):
     vehicle_type = models.ForeignKey(VehicleType,on_delete=models.SET_NULL,null=True)
     parking_slot = models.ForeignKey(ParkingSlot,on_delete=models.SET_NULL,null=True)
+
+auditlog.register(ParkingSlot_VehicleType)
  
 
 
@@ -298,6 +318,7 @@ class Vehicle(models.Model):
     class Meta:
         unique_together = ('vehicle_type','user')
 
+Vehicle
 
 class PricingRule(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
@@ -341,6 +362,8 @@ class Booking(models.Model):
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
 
+auditlog.register(Booking)
+
 
 class Payment(models.Model):
     booking = models.ForeignKey(Booking,on_delete=models.SET_NULL,null=True)
@@ -355,6 +378,8 @@ class Payment(models.Model):
 
     class Meta:
         db_table = "payment"
+
+auditlog.register(Payment)
 
 
 
