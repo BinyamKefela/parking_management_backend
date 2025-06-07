@@ -128,4 +128,3 @@ class NotificationCreateView(generics.CreateAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    
