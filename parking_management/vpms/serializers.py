@@ -134,6 +134,17 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         representation['owner'] = OwnerSerializer(instance.owner).data
         representation['plan'] = PlanSerializer(instance.plan).data if instance.plan else None
         return representation
+  
+    
+class SubscriptionPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPayment
+        fields = "__all__"
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['subscription'] = SubscriptionSerializer(instance.subscription).data
+        return representation
+    
     
 class ParkingZoneSerializer(serializers.ModelSerializer):
     class Meta:

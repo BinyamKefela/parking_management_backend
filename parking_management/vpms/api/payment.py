@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Payment,Booking,Notification
+from ..models import Payment,Booking,Notification,NotificationUser
 from ..serializers import PaymentSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -109,7 +109,19 @@ class PaymentCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         validated_data = serializer.validated_data
         validated_data['created_at'] = datetime.datetime.now()
-        serializer.save()
+
+        
+        instance = serializer.save()
+
+        notifiction = Notification()
+        notifiction.user = self.request.user
+        notifiction.notification_type = "payment for booking made"
+        notifiction.payment = instance
+        notifiction.message = "a new booking payment made by user "+str(self.request.user.email)
+        notifiction.is_read = False
+        notifiction.created_at = datetime.datetime.now()
+        notifiction.save()
+
 
     def perform_update(self,serializer):
         validated_data = serializer.validated_data

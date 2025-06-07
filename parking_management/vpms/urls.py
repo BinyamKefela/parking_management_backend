@@ -23,6 +23,7 @@ from .api.default_price import *
 from .api.payment import *
 from .api.favorite_zones import *
 from .api.log import *
+from .api.subscription_payment import *
 
 
 
@@ -101,6 +102,15 @@ urlpatterns = [
   path('post_subscription',SubscriptionCreateView.as_view(),name='post_subscription'),
   path('update_subscription/<int:id>',SubscriptionUpdateView.as_view(),name='update_subscription'),
   path('delete_subscription/<int:id>',SubscriptionDestroyView.as_view(),name='delete_subscription'),
+
+
+      #---------------------------------Subscription payment routes-------------------------------------------------------
+
+  path('get_subscription_payments',SubscriptionPaymentListView.as_view(),name='get_subscription_payments'),
+  path('get_subscription_payment/<int:id>',SubscriptionPaymentRetrieveView.as_view(),name='get_subscription_payment'),
+  path('post_subscription_payment',SubscriptionPaymentCreateView.as_view(),name='post_subscription_payment'),
+  path('update_subscription_payment/<int:id>',SubscriptionPaymentUpdateView.as_view(),name='update_subscription_payment'),
+  path('delete_subscription_payment/<int:id>',SubscriptionPaymentDestroyView.as_view(),name='delete_subscription_payment'),
 
       #---------------------------------Zone owner bank account routes-------------------------------------------------------
 

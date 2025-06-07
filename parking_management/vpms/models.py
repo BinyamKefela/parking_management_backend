@@ -185,6 +185,21 @@ class Subscription(models.Model):
 
 auditlog.register(Subscription)
 
+
+def validate_subscription_payment_picture(value):
+    valid_extensions = ['.png','.jpg','.jpeg','.PNG','.JPG','.JPEG']
+    ext = os.path.splitext(value.name)[1]
+    if not ext in valid_extensions:
+        raise ValidationError('Unsupported filed extension')
+        
+
+def get_subscription_payment_image_upload_path(instance,filename):
+    new_file_name = "subscription_payments/"+f'{filename}'
+    return new_file_name
+
+
+
+
 class SubscriptionPayment(models.Model):
     subscription = models.ForeignKey(Subscription,on_delete=models.SET_NULL,null=True)
     payment_method = models.CharField(max_length=100,null=False)
@@ -193,6 +208,7 @@ class SubscriptionPayment(models.Model):
     transaction_id = models.CharField(max_length=100,null=False)
     created_at = models.DateTimeField(null=True)
     updated_at = models.DateTimeField(null=True)
+    image = models.FileField(upload_to=get_subscription_payment_image_upload_path,validators=[validate_subscription_payment_picture],null=True,blank=True)
 
 
     class Meta:
@@ -387,6 +403,7 @@ auditlog.register(Payment)
 class Notification(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     notification_type = models.CharField(max_length=100)
+    zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
     #maintenance_request_id = models.ForeignKey(MaintenanceRequest,on_delete=models.SET_NULL,null=True)
     payment = models.ForeignKey(Payment,on_delete=models.SET_NULL,null=True)
     booking = models.ForeignKey(Booking,on_delete=models.SET_NULL,null=True)

@@ -24,6 +24,11 @@ class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [SearchFilter, OrderingFilter]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'zone__zone_owner__email':['exact'],
+    'is_read': ['exact']
+    }
     search_fields = [field.name for field in Notification._meta.fields]
     ordering_fields = [field.name for field in Notification._meta.fields]
     ordering = ['id']
@@ -60,6 +65,11 @@ class NotificationUnreadUserListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [SearchFilter, OrderingFilter]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'zone__zone_owner__email':['exact'],
+    'is_read': ['exact']
+    }
     search_fields = [field.name for field in Notification._meta.fields]
     ordering_fields = [field.name for field in Notification._meta.fields]
     ordering = ['id']

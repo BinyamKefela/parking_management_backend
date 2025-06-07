@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Booking,ParkingZone,ParkingSlot,Vehicle,ParkingSlot_VehicleType,DefaultPrice,Payment
+from ..models import Booking,ParkingZone,ParkingSlot,Vehicle,ParkingSlot_VehicleType,DefaultPrice,Payment,Notification,NotificationUser
 from ..serializers import BookingSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -126,6 +126,18 @@ class BookingCreateView(generics.CreateAPIView):
         booking.save()
         parking_slot.is_available=False
         parking_slot.save()
+
+
+        notifiction = Notification()
+        notifiction.user = request.user
+        notifiction.notification_type = "booking made"
+        notifiction.booking = booking
+        notifiction.message = "a new booking made by user "+str(request.user.email)
+        notifiction.is_read = False
+        notifiction.created_at = datetime.datetime.now()
+        notifiction.zone = booking.parking_slot.parking_slot_group.parking_floor.zone
+        notifiction.save()
+
         return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
     
 @api_view(['POST'])
@@ -141,6 +153,18 @@ def cancel_booking(request):
         booking.status = BOOKING_CANCELLED
         parking_slot.save()
         booking.save()
+
+        notifiction = Notification()
+        notifiction.user = request.user
+        notifiction.notification_type = "booking cancelled"
+        notifiction.booking = booking
+        notifiction.message = "booking cancelled by user "+str(request.user.email)
+        notifiction.is_read = False
+        notifiction.created_at = datetime.datetime.now()
+        notifiction.zone = booking.parking_slot.parking_slot_group.parking_floor.zone
+        notifiction.save()
+
+        return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
         return Response({"message","Booking cancelled successfully"},status=status.HTTP_200_OK)
     except:
         return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
@@ -159,6 +183,17 @@ def cancel_booking_phone(request,booking):
         booking.status = BOOKING_CANCELLED
         parking_slot.save()
         booking.save()
+
+        notifiction = Notification()
+        notifiction.user = request.user
+        notifiction.notification_type = "booking cancelled"
+        notifiction.booking = booking
+        notifiction.message = "booking cancelled by user "+str(request.user.email)
+        notifiction.is_read = False
+        notifiction.created_at = datetime.datetime.now()
+        notifiction.zone = booking.parking_slot.parking_slot_group.parking_floor.zone
+        notifiction.save()
+
         return Response({"message","Booking cancelled successfully"},status=status.HTTP_200_OK)
     except:
         return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
@@ -190,6 +225,17 @@ def make_payment(request):
     booking.save()
     parking_slot.save()
     payment.save()
+
+    notifiction = Notification()
+    notifiction.user = request.user
+    notifiction.notification_type = "payment made"
+    notifiction.payment = payment
+    notifiction.message = "a new payment made by user "+str(request.user.email)
+    notifiction.is_read = False
+    notifiction.created_at = datetime.datetime.now()
+    notifiction.zone = booking.parking_slot.parking_slot_group.parking_floor.zone
+    notifiction.save()
+    
     return Response({"message":"payment completed successfully"},status=status.HTTP_200_OK)
     
 
@@ -220,6 +266,17 @@ def make_payment_phone(request,booking,end_time):
     booking.save()
     parking_slot.save()
     payment.save()
+
+    notifiction = Notification()
+    notifiction.user = request.user
+    notifiction.notification_type = "payment made"
+    notifiction.payment = payment
+    notifiction.message = "a new payment made by user "+str(request.user.email)
+    notifiction.is_read = False
+    notifiction.created_at = datetime.datetime.now()
+    notifiction.zone = booking.parking_slot.parking_slot_group.parking_floor.zone
+    notifiction.save()
+
     return Response({"message":"payment completed successfully"},status=status.HTTP_200_OK)
 
 
