@@ -157,6 +157,7 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
         representation["parking_floors"] = ParkingFloorSerializer(ParkingFloor.objects.filter(zone=instance.id),many=True).data
         representation['parking_zone_pictures'] = ParkingZonePictureSerializerDummy(ParkingZonePicture.objects.filter(parking_zone=instance.id),many=True).data
         representation['default_price'] = DefaultPriceSerializer(DefaultPrice.objects.filter(parking_zone=instance.id),many=True).data
+        representation['zone_utility'] = ZoneUtilitiesSerializerDummy(ZoneUtilities.objects.filter(parking_zone=instance),many=True).data
         return representation
     
 class ParkingZoneSerializerDummy(serializers.ModelSerializer):
@@ -477,4 +478,20 @@ class LogEntrySerializer(serializers.ModelSerializer):
             return {field: f"{change[0]} → {change[1]}" for field, change in changes.items()}
         except Exception:
             return {}
+        
+
+class ZoneUtilitiesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ZoneUtilities
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance) 
+        representation['parking_zone'] = ParkingZoneSerializer(instance.parking_zone).data
+        return representation
+    
+class ZoneUtilitiesSerializerDummy(serializers.ModelSerializer):
+    class Meta:
+        model = ZoneUtilities
+        fields = "__all__"
         

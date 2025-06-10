@@ -421,11 +421,14 @@ class FavoriteZones(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
 
 
-class ZoneUtitlities(models.Model):
+class ZoneUtilities(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
     wifi = models.BooleanField(default=False)
     cctv = models.BooleanField(default=False)
     charger = models.BooleanField(default=False)
+    fuel = models.BooleanField(default=False)
+    lighting = models.BooleanField(default=False)
+    drainage = models.BooleanField(default=False)
 
 
 

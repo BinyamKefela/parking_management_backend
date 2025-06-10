@@ -24,6 +24,9 @@ from .api.payment import *
 from .api.favorite_zones import *
 from .api.log import *
 from .api.subscription_payment import *
+from .api.zone_utility import *
+from .api.notification import *
+from .api.notification_user import *
 
 
 
@@ -46,6 +49,7 @@ urlpatterns = [
   #path("get_owners",GetOwners.as_view(),name="get_owners"),
 
   path('sign_up',sign_up, name='sign_up'),
+  path('register',sign_up_zone_owner, name='register'),
   path('verify-email/<uuid:token>', verify_email, name='verify_email'),
 
   path('send_password_reset_email_phone',send_password_reset_email_phone, name='send_password_reset_email_phone'),
@@ -267,6 +271,34 @@ urlpatterns = [
 #-----------------------------log entry--------------------------------------------------------------------
 
   path('get_logs', LogEntryListView.as_view(), name='auditlog-list'),
+
+
+
+#------------------------------zone utilities---------------------------------------------------------------
+
+
+  path('get_zone_utilities',ZoneUtilitiesListView.as_view(),name='get_zone_utilities'),
+  path('get_zone_utility/<int:id>',ZoneUtilitiesRetrieveView.as_view(),name='get_zone_utility'),
+  path('post_zone_utility',ZoneUtilitiesCreateView.as_view(),name='post_zone_utility'),
+  path('update_zone_utility/<int:id>',ZoneUtilitiesUpdateView.as_view(),name='update_zone_utility'),
+  path('delete_zone_utility/<int:id>',ZoneUtilitiesDestroyView.as_view(),name='delete_zone_utility'),
+
+
+   #---------------------------------notification routes--------------------------------------------------
+
+  path("get_notifications", NotificationListView.as_view(), name="get_notifications"),
+  path("get_notification/<int:id>",NotificationRetrieveView.as_view(),name='get_notification'),
+  path("post_notification",NotificationCreateView.as_view(),name="post_notification"),
+  path("update_notification/<int:id>",NotificationUpdateView.as_view(),name="update_notification"),
+  path("delete_notification/<int:id>",NotificationDestroyView.as_view(),name="delete_notification"),
+  path("get_user_notifications/<int:user_id>",NotificationGetUserListView.as_view(),name="get_user_notification"),
+  path("get_user_unread_notifications/<int:user_id>",NotificationUnreadUserListView.as_view(),name="get_user_unread_notifications"),
+
+
+#---------------------------------notification user routes--------------------------------------------------
+
+  path("get_notification_user/<int:user_id>",NotificationUserListView.as_view(),name='get_notification_user'),
+  path("post_notification_user",NotificationUserCreateView.as_view(),name="post_notification_user"),
 
 
 

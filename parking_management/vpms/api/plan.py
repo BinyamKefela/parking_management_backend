@@ -20,7 +20,7 @@ User = get_user_model()
 class PlanListView(generics.ListAPIView):
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = []
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
     filterset_fields = '__all__'
     search_fields = [field.name for field in Plan._meta.fields]
