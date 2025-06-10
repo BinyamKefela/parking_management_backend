@@ -11,7 +11,7 @@ from django.conf import settings
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
-from vpms.models import Owner
+from vpms.models import ParkingZone
 
 
 User = get_user_model()
@@ -20,7 +20,7 @@ User = get_user_model()
 class FavoriteZonesListView(generics.ListAPIView):
     queryset = FavoriteZones.objects.all()
     serializer_class = FavoriteZonesSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = []
     filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
     #filterset_fields = '__all__'
     #search_fields = [field.name for field in FavoriteZones._meta.fields]
@@ -68,19 +68,19 @@ class FavoriteZonesDestroyView(generics.DestroyAPIView):
 class FavoriteZonesCreateView(generics.CreateAPIView):
     queryset = FavoriteZones.objects.all()
     serializer_class = FavoriteZonesSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
-
-    def perform_create(self, serializer):
-        validated_data = serializer.validated_data
-        validated_data['created_at'] = datetime.datetime.now()
-        serializer.save()
+    permission_classes = []
 
     def create(self, request, *args, **kwargs):
-        owner_id = request.data.get('owner')
+        user_id = request.data.get('user')
         try:
-            owner = Owner.objects.get(id=owner_id)
+            user = User.objects.get(id=user_id)
         except:
-            return Response({"error":"there is no owner with the given owner id"},status=status.HTTP_404_NOT_FOUND)
+            return Response({"error":"there is no user with the given user id"},status=status.HTTP_404_NOT_FOUND)
+        zone_id = request.data.get('parking_zone')
+        try:
+            zone = ParkingZone.objects.get(id=zone_id)
+        except:
+            return Response({"error":"there is no zone with the given zone id"},status=status.HTTP_404_NOT_FOUND)
         
         return super().create(request, *args, **kwargs)
 
