@@ -83,6 +83,3 @@ class FavoriteZonesCreateView(generics.CreateAPIView):
             return Response({"error":"there is no zone with the given zone id"},status=status.HTTP_404_NOT_FOUND)
         
         return super().create(request, *args, **kwargs)
-
-
-
