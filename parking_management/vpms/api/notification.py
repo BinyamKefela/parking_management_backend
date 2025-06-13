@@ -1,13 +1,15 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import Notification,NotificationUser
+from ..models import Notification,NotificationUser,ParkingZone
 from ..serializers import NotificationSerializer
 from vpms.api.custom_pagination import CustomPagination
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 MAINTENANCE_REQUEST_CREATED = "maintenance_request_created"
 MAINTENANCE_REQUEST_RESOLVED = "maintenance_request_resolved"
@@ -23,10 +25,11 @@ class NotificationListView(generics.ListAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    filter_backends = [SearchFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
     filterset_fields = {
     #'name': ['exact', 'icontains'],
     'zone__zone_owner__email':['exact'],
+    'user__email':['exact'],
     'is_read': ['exact']
     }
     search_fields = [field.name for field in Notification._meta.fields]
@@ -68,6 +71,7 @@ class NotificationUnreadUserListView(generics.ListAPIView):
     filterset_fields = {
     #'name': ['exact', 'icontains'],
     'zone__zone_owner__email':['exact'],
+    'user__email':['exact'],
     'is_read': ['exact']
     }
     search_fields = [field.name for field in Notification._meta.fields]
@@ -82,6 +86,41 @@ class NotificationUnreadUserListView(generics.ListAPIView):
             try:
                # Filter the queryset based on the primary key
                queryset = queryset.filter(user_id=User.objects.get(id=id)).exclude(id__in=NotificationUser.objects.filter(user_id=id)
+                                                              .values_list("notification_id",flat=True))  # Assuming your model has an 'id' field
+               return queryset
+            except:
+                raise NotFound(detail="There is no notification with the given ID.")
+        else:
+            # If no 'pk' is provided, return the default queryset (all objects)
+            return queryset 
+        
+# an API for getting unread notifications of a specific user
+class NotificationUnreadListView(generics.ListAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    filter_backends = [SearchFilter, OrderingFilter]
+    filterset_fields = {
+    #'name': ['exact', 'icontains'],
+    'zone__zone_owner__email':['exact'],
+    'user__email':['exact'],
+    'is_read': ['exact']
+    }
+    search_fields = [field.name for field in Notification._meta.fields]
+    ordering_fields = [field.name for field in Notification._meta.fields]
+    ordering = ['id']
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        id = self.kwargs.get('user_id')
+        #zone = self.kwargs.get('zone_id')
+        
+        queryset = super().get_queryset()
+        if id is not None:
+            try:
+               User.objects.get(id=id)
+               # Filter the queryset based on the primary key
+               queryset = queryset.filter(zone=ParkingZone.objects.filter(zone_owner=user)).exclude(id__in=NotificationUser.objects.filter(user_id=id)
                                                               .values_list("notification_id",flat=True))  # Assuming your model has an 'id' field
                return queryset
             except:

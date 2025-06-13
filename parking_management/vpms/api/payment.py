@@ -10,6 +10,8 @@ from datetime import timezone,timedelta
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 
 PAYMENT_PENDING = "pending"
@@ -31,11 +33,12 @@ class PaymentListView(generics.ListAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    #filter_backends = [SearchFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
     search_fields = ["booking__vehicle__plate_number","transaction_id","booking__vehicle_number"]
     filterset_fields = {
     #'name': ['exact', 'icontains'],
-    'booking__parking_slot__parking_slot_group__parking_floor__zone__zone_owner__email':['exact']
+    'booking__parking_slot__parking_slot_group__parking_floor__zone__zone_owner__email':['exact'],
+    'booking__id':['exact']
     }
     #search_fields = ["parking_slot__slot_number","vehicle__plate_number","vehicle_number"]
     ordering_fields = [field.name for field in Payment._meta.fields]

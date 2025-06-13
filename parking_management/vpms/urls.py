@@ -217,6 +217,7 @@ urlpatterns = [
   path('calculate_price', CalculatePriceView.as_view(), name='calculate_price'),
   path('make_payment',make_payment,name="make_payment"),
   path('make_payment_phone/<str:booking>/<str:end_time>',make_payment_phone,name="make_payment_phone"),
+  path('complete_payment_phone',complete_payment_phone,name="complete_payment_phone"),
   
 
   
@@ -293,6 +294,8 @@ urlpatterns = [
   path("delete_notification/<int:id>",NotificationDestroyView.as_view(),name="delete_notification"),
   path("get_user_notifications/<int:user_id>",NotificationGetUserListView.as_view(),name="get_user_notification"),
   path("get_user_unread_notifications/<int:user_id>",NotificationUnreadUserListView.as_view(),name="get_user_unread_notifications"),
+  path("get_unread_notifications/<int:user_id>",NotificationUnreadListView.as_view(),name="get_unread_notifications"),
+
 
 
 #---------------------------------notification user routes--------------------------------------------------

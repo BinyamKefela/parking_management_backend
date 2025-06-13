@@ -90,8 +90,9 @@ class BookingCreateView(generics.CreateAPIView):
         total_price = request.data.get('total_price')
         try:
             parking_slot = ParkingSlot.objects.get(id=parking_slot_id)
-            if parking_slot.is_available == False:
-                return Response({"error":"The selected parking slot is currently unavailable"},status=403)
+            if not vehicle_id:
+              if parking_slot.is_available == False:
+                  return Response({"error":"The selected parking slot is currently unavailable"},status=403)
         except:
             return Response({"error":"There is no parking slot with the given parking slot"},status=400)
         
@@ -121,11 +122,10 @@ class BookingCreateView(generics.CreateAPIView):
             booking.total_price = total_price
         if vehicle_number:
             booking.vehicle_number = vehicle_number
-        if total_price:
-            parking_slot.is_available = False
+        #if total_price:
+        #    parking_slot.is_available = False
         booking.save()
-        parking_slot.is_available=False
-        parking_slot.save()
+        
 
 
         notifiction = Notification()
@@ -164,7 +164,7 @@ def cancel_booking(request):
         notifiction.zone = booking.parking_slot.parking_slot_group.parking_floor.zone
         notifiction.save()
 
-        return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
+        #return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
         return Response({"message","Booking cancelled successfully"},status=status.HTTP_200_OK)
     except:
         return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
@@ -249,10 +249,10 @@ def make_payment_phone(request,booking,end_time):
         booking = Booking.objects.get(id=booking_id)
         booking.end_time = end_time
         booking.total_price = calculate_price(parking_zone=booking.parking_slot.parking_slot_group.parking_floor.zone,start_time=booking.start_time,end_time=end_time)
-        booking.status=BOOKING_COMPLETE
+        booking.status=BOOKING_ACTIVE
         try:
             parking_slot = ParkingSlot.objects.get(id=booking.parking_slot.id)
-            parking_slot.is_available=True
+            parking_slot.is_available=False
             payment = Payment()
             payment.booking = booking
             payment.user = request.user
@@ -279,6 +279,26 @@ def make_payment_phone(request,booking,end_time):
 
     return Response({"message":"payment completed successfully"},status=status.HTTP_200_OK)
 
+
+
+@api_view(['POST'])
+@permission_classes([])
+def complete_payment_phone(request):
+    booking_id = request.data.get("booking")
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        if not (booking.status == BOOKING_ACTIVE):
+            return Response({"there is no active booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
+        parking_slot = booking.parking_slot
+        parking_slot.is_available = True
+        booking.status = BOOKING_COMPLETE
+        parking_slot.save()
+        booking.save()
+
+        return Response({"message","Booking completed successfully"},status=status.HTTP_200_OK)
+    except:
+        return Response({"error":"There is no booking with the given booking id"},status=status.HTTP_400_BAD_REQUEST)
+    
 
 
 # views.py
