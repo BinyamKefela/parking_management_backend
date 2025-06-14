@@ -431,7 +431,7 @@ def sign_up_zone_owner(request):
             user = User()
             user.email = request.data.get("email")
             user.is_active=False
-            user.groups.set(Group.objects.get(name="owner"))
+            
             if request.data.get("phone_number"):
                user.phone_number = request.data.get("phone_number")
             if request.data.get("first_name"):
@@ -441,7 +441,8 @@ def sign_up_zone_owner(request):
             if request.data.get("last_name"):
                user.last_name = request.data.get("last_name")
             user.set_password(request.data.get("password"))
-
+            user.save()
+            user.groups.set(Group.objects.filter(name="owner"))
             try:
                subscription = Subscription()
                subscription.plan = Plan.objects.get(request.data.get("plan"))
