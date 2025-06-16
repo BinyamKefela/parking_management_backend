@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.filters import OrderingFilter,SearchFilter
-from ..models import ParkingZone,ParkingZone
+from ..models import ParkingZone,ParkingZone,Subscription,SubscriptionPayment
 from ..serializers import ParkingZoneSerializer
 from vpms.api.custom_pagination import CustomPagination
 import datetime
@@ -35,6 +35,16 @@ class ParkingZoneListView(generics.ListAPIView):
     ordering_fields = [field.name for field in ParkingZone._meta.fields]
     ordering = ['id']
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        today = datetime.datetime.now()
+        subscription = Subscription.objects.filter(user=user,status='active').order_by('end_date')
+
+        if (not SubscriptionPayment.objects.filter(subscription=subscription,subscription__end_date__lte=today).count()>0) and (not user.is_superuser):
+            queryset.delete()
+        return queryset
     
 
 
