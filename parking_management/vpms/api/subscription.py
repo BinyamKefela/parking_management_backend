@@ -25,7 +25,8 @@ class SubscriptionListView(generics.ListAPIView):
     #filterset_fields = '__all__'
     #search_fields = [field.name for field in Subscription._meta.fields]
     filterset_fields = {
-    'owner__company_owner__id': ['exact',],
+    'owner__company_owner__id': ['exact'],
+    'status': ['exact']
     }
     search_fields = ["owner__company_owner__email","owner__company_name"]
     ordering_fields = [field.name for field in Subscription._meta.fields]
