@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 
 User = get_user_model()
@@ -17,6 +19,7 @@ class DefaultPriceListView(generics.ListAPIView):
     queryset = DefaultPrice.objects.all()
     serializer_class = DefaultPriceSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    filter_backends = [DjangoFilterBackend,SearchFilter, OrderingFilter]
     #filter_backends = [SearchFilter, OrderingFilter]
     #search_fields = [field.name for field in DefaultPrice._meta.fields]
     filterset_fields = {

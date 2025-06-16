@@ -23,7 +23,7 @@ from rest_framework.permissions import AllowAny
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.contrib.sites.models import Site
-from ..models import EmailVerification,Subscription,SubscriptionPayment,Plan
+from ..models import EmailVerification,Subscription,SubscriptionPayment,Plan,Notification
 import os
 from dotenv import load_dotenv
 import random
@@ -445,13 +445,23 @@ def sign_up_zone_owner(request):
             user.groups.set(Group.objects.filter(name="owner"))
             try:
                subscription = Subscription()
-               subscription.plan = Plan.objects.get(request.data.get("plan"))
+               subscription.plan = Plan.objects.get(id=request.data.get("plan"))
                subscription.start_date = request.data.get("start_date")
                subscription.status = "pending"
                subscription.created_at = datetime.datetime.now()
+               subscription.owner = user
                subscription.save()
-            except:
-                return Response({"error":"there is no subscription with the given invalid plan id"},status=status.HTTP_400_BAD_REQUEST)
+
+               notifiction = Notification()
+               notifiction.user = user
+               notifiction.notification_type = "subscription created"
+               #notifiction.payment = instance
+               notifiction.message = "a new subscription made by user "+str(user.email)
+               notifiction.is_read = False
+               notifiction.created_at = datetime.datetime.now()
+               notifiction.save()
+            except Exception as e:
+                return Response({"error":str(e)},status=status.HTTP_400_BAD_REQUEST)
             user.save()
             #if serializer.is_valid():
             #    user = serializer.save(is_active=False)  # Initially set user as inactive
