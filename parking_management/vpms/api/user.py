@@ -17,7 +17,7 @@ from django.db.models import F, Value
 from django.db.models.functions import Concat
 import json
 from django.conf import settings
-from ..models import Staff,EmailResetCode
+from ..models import Staff,EmailResetCode,Owner
 
 from rest_framework.permissions import AllowAny
 from django.core.mail import send_mail
@@ -444,12 +444,23 @@ def sign_up_zone_owner(request):
             user.save()
             user.groups.set(Group.objects.filter(name="owner"))
             try:
+               
+               owner = Owner()
+               owner.company_name = request.data.get("company_name")
+               owner.status = "active"
+               owner.company_owner = user
+               owner.plan = Plan.objects.get(id=request.data.get("plan"))
+               owner.company_address = request.data.get("company_address")
+               owner.company_email = user.email
+               owner.created_at = datetime.datetime.now()
+               owner.save()
+
                subscription = Subscription()
                subscription.plan = Plan.objects.get(id=request.data.get("plan"))
                subscription.start_date = request.data.get("start_date")
                subscription.status = "pending"
                subscription.created_at = datetime.datetime.now()
-               subscription.owner = user
+               subscription.owner = owner
                subscription.save()
 
                notifiction = Notification()
