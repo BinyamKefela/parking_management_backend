@@ -38,6 +38,7 @@ class PaymentListView(generics.ListAPIView):
     filterset_fields = {
     #'name': ['exact', 'icontains'],
     'booking__parking_slot__parking_slot_group__parking_floor__zone__zone_owner__email':['exact'],
+    'booking__parking_slot__parking_slot_group__parking_floor__zone__id':['exact'],
     'booking__id':['exact']
     }
     #search_fields = ["parking_slot__slot_number","vehicle__plate_number","vehicle_number"]

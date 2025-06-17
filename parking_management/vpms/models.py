@@ -420,6 +420,9 @@ class FavoriteZones(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)
 
+    class Meta:
+        unique_together = ('user','parking_zone')
+
 
 class ZoneUtilities(models.Model):
     parking_zone = models.ForeignKey(ParkingZone,on_delete=models.SET_NULL,null=True)

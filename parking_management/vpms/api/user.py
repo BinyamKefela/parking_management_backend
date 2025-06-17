@@ -480,7 +480,7 @@ def sign_up_zone_owner(request):
         current_site = request.build_absolute_uri('/')
         mail_subject = 'Verify your email address'
         relative_link = "api/verify-email/"+str(verification.token)#reverse('verify_email', kwargs={'token': str(verification.token)})
-        absolute_url = f'http://{current_site}{relative_link}'  # Adjust protocol if needed
+        absolute_url = f'{current_site}{relative_link}'  # Adjust protocol if needed
         message = f'Hi ,\n\nPlease click on the link below to verify your email address and complete your signup:\n\n{absolute_url}'
         send_mail(mail_subject, message, EMAIL_HOST_USER, [request.data.get("email")])
         return Response({'message': 'Registration successful. Please check your email to verify your account.'}, status=status.HTTP_201_CREATED)
@@ -514,7 +514,7 @@ def sign_up(request):
         current_site = request.build_absolute_uri('/')
         mail_subject = 'Verify your email address'
         relative_link = "api/verify-email/"+str(verification.token)#reverse('verify_email', kwargs={'token': str(verification.token)})
-        absolute_url = f'http://{current_site}{relative_link}'  # Adjust protocol if needed
+        absolute_url = f'{current_site}{relative_link}'  # Adjust protocol if needed
         message = f'Hi ,\n\nPlease click on the link below to verify your email address and complete your signup:\n\n{absolute_url}'
         send_mail(mail_subject, message, EMAIL_HOST_USER, [request.data.get("email")])
         return Response({'message': 'Registration successful. Please check your email to verify your account.'}, status=status.HTTP_201_CREATED)

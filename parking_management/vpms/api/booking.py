@@ -36,7 +36,8 @@ class BookingListView(generics.ListAPIView):
     'vehicle__plate_number': ['exact','icontains'],
     'vehicle_number':['exact','icontains'],
     'status':['exact','icontains'],
-    'parking_slot__parking_slot_group__parking_floor__zone__zone_owner__email':['exact',]
+    'parking_slot__parking_slot_group__parking_floor__zone__zone_owner__email':['exact'],
+    'parking_slot__parking_slot_group__parking_floor__zone__id':['exact']
     }
     search_fields = ["parking_slot__slot_number","vehicle__plate_number","vehicle_number"]
 
@@ -185,7 +186,7 @@ def cancel_booking_phone(request,booking):
         booking.save()
 
         notifiction = Notification()
-        notifiction.user = request.user
+        notifiction.user = booking.vehicle.user
         notifiction.notification_type = "booking cancelled"
         notifiction.booking = booking
         notifiction.message = "booking cancelled by user "+str(request.user.email)
@@ -255,23 +256,23 @@ def make_payment_phone(request,booking,end_time):
             parking_slot.is_available=False
             payment = Payment()
             payment.booking = booking
-            payment.user = request.user
+            payment.user = booking.vehicle.user
             payment.amount = booking.total_price
             payment.status = "complete"
             payment.created_at = datetime.datetime.now()
         except Exception as e:
             return Response({"error":str(e)},status=status.HTTP_404_NOT_FOUND)
     except Exception as ex:
-        return Response({"error":"Ther is no booking with the given booking id"},status=status.HTTP_404_NOT_FOUND)
+        return Response({"error":str(ex)},status=status.HTTP_404_NOT_FOUND)
     booking.save()
     parking_slot.save()
     payment.save()
 
     notifiction = Notification()
-    notifiction.user = request.user
+    notifiction.user = booking.vehicle.user
     notifiction.notification_type = "payment made"
     notifiction.payment = payment
-    notifiction.message = "a new payment made by user "+str(request.user.email)
+    notifiction.message = "a new payment made by user "+str(booking.vehicle.user.email)
     notifiction.is_read = False
     notifiction.created_at = datetime.datetime.now()
     notifiction.zone = booking.parking_slot.parking_slot_group.parking_floor.zone

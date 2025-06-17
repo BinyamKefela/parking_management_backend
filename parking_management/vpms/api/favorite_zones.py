@@ -25,7 +25,8 @@ class FavoriteZonesListView(generics.ListAPIView):
     #filterset_fields = '__all__'
     #search_fields = [field.name for field in FavoriteZones._meta.fields]
     filterset_fields = {
-    'user__id': ['exact',],
+    'user__id': ['exact'],
+    'parking_zone':['exact']
     }
     search_fields = ["user__email","user_id","parking_zone__name"]
     ordering_fields = [field.name for field in FavoriteZones._meta.fields]
