@@ -40,9 +40,9 @@ class ParkingZoneListView(generics.ListAPIView):
         queryset = super().get_queryset()
         user = self.request.user
         today = datetime.datetime.now()
-        subscription = Subscription.objects.filter(user=user,status='active').order_by('end_date')
+        subscription = Subscription.objects.filter(user=user,status='active').order_by('end_date').first()
 
-        if (not SubscriptionPayment.objects.filter(subscription=subscription,subscription__end_date__lte=today).count()>0) and (not user.is_superuser):
+        if (not SubscriptionPayment.objects.filter(subscription=subscription,subscription__end_date__gte=today,status="paid").count()>0) and (not user.is_superuser):
             queryset.delete()
         return queryset
     

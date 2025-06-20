@@ -158,6 +158,7 @@ class ParkingZoneSerializer(serializers.ModelSerializer):
         representation['parking_zone_pictures'] = ParkingZonePictureSerializerDummy(ParkingZonePicture.objects.filter(parking_zone=instance.id),many=True).data
         representation['default_price'] = DefaultPriceSerializer(DefaultPrice.objects.filter(parking_zone=instance.id),many=True).data
         representation['zone_utility'] = ZoneUtilitiesSerializerDummy(ZoneUtilities.objects.filter(parking_zone=instance),many=True).data
+        representation['bank_account'] = ZoneOwnerBankAccountSerializer(ZoneOwnerBankAccount.objects.filter(owner=Owner.objects.filter(company_owner=ParkingZone.objects.get(id=instance.id).zone_owner).first()),many=True).data
         return representation
     
 class ParkingZoneSerializerDummy(serializers.ModelSerializer):

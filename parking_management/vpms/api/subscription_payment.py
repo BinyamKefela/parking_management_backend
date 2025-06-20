@@ -4,6 +4,9 @@ from rest_framework.filters import OrderingFilter,SearchFilter
 from ..models import SubscriptionPayment
 from ..serializers import SubscriptionPaymentSerializer
 from vpms.api.custom_pagination import CustomPagination
+from rest_framework.response import Response
+from rest_framework import status
+
 
 
 SUBSCRIPTION_PAYMENT_PENDING = "pending"
@@ -43,7 +46,7 @@ class SubscriptionPaymentDestroyView(generics.DestroyAPIView):
     lookup_field ='id'
 
     def destroy(self, request, *args, **kwargs):
-        subscription_ayment = self.get_object()
+        subscription_payment = self.get_object()
         if not subscription_payment:
             return Response({"error":"subscription payment not found!"}, status=status.HTTP_404_NOT_FOUND)
         subscription_payment.status = SUBSCRIPTION_PAYMENT_CANCELLED
