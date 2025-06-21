@@ -79,6 +79,11 @@ class SubscriptionCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         owner_id = request.data.get('owner')
         try:
+            subscription_old = Subscription.objects.filter(owner=Owner.objects.get(id=owner_id))
+            subscription_old.delete()
+        except:
+            return Response({"error":"there is no owner with the given owner id"},status=status.HTTP_400_BAD_REQUEST)
+        try:
             owner = Owner.objects.get(id=owner_id)
         except:
             return Response({"error":"there is no owner with the given owner id"},status=status.HTTP_404_NOT_FOUND)
